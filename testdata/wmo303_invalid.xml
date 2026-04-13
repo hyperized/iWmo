@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Invalid: missing Bedrag, declaratie period end before begin -->
+<Bericht>
+  <Header>
+    <BerichtCode>303</BerichtCode>
+    <BerichtVersie>3.2</BerichtVersie>
+    <Afzender>12345678</Afzender>
+    <Ontvanger>0363</Ontvanger>
+    <BerichtIdentificatie>MSG-303-INVALID</BerichtIdentificatie>
+    <DagtekeningBericht>2026-05-05</DagtekeningBericht>
+  </Header>
+  <Client>
+    <Bsn>123456782</Bsn>
+    <Naam>
+      <Achternaam>Janssen</Achternaam>
+    </Naam>
+    <Declaratieperiode>
+      <Begindatum>2026-05-31</Begindatum>
+      <Einddatum>2026-05-01</Einddatum>
+    </Declaratieperiode>
+    <Prestatie>
+      <ToewijzingNummer>12345</ToewijzingNummer>
+      <Product>
+        <Categorie>03</Categorie>
+        <Code>H532</Code>
+      </Product>
+      <Begindatum>2026-05-01</Begindatum>
+      <Einddatum>2026-05-31</Einddatum>
+      <Omvang>
+        <Volume>32</Volume>
+        <Eenheid>uur</Eenheid>
+        <Frequentie>maand</Frequentie>
+      </Omvang>
+      <!-- Bedrag intentionally omitted -->
+    </Prestatie>
+  </Client>
+</Bericht>

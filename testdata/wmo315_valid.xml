@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bericht>
+  <Header>
+    <BerichtCode>315</BerichtCode>
+    <BerichtVersie>3.2</BerichtVersie>
+    <Afzender>12345678</Afzender>
+    <Ontvanger>0363</Ontvanger>
+    <BerichtIdentificatie>MSG-315-001</BerichtIdentificatie>
+    <DagtekeningBericht>2026-05-15</DagtekeningBericht>
+  </Header>
+  <Client>
+    <Bsn>123456782</Bsn>
+    <Naam>
+      <Voornamen>Jan</Voornamen>
+      <Tussenvoegsels>van</Tussenvoegsels>
+      <Achternaam>Janssen</Achternaam>
+    </Naam>
+    <Geboortedatum>1980-01-15</Geboortedatum>
+    <Statusmelding>
+      <ToewijzingNummer>12345</ToewijzingNummer>
+      <StatusCode>01</StatusCode>
+      <StatusDatum>2026-05-01</StatusDatum>
+      <Commentaar>Zorg gestart conform toewijzing</Commentaar>
+    </Statusmelding>
+  </Client>
+</Bericht>

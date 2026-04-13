@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Invalid: missing StatusCode and invalid StatusDatum format -->
+<Bericht>
+  <Header>
+    <BerichtCode>315</BerichtCode>
+    <BerichtVersie>3.2</BerichtVersie>
+    <Afzender>12345678</Afzender>
+    <Ontvanger>0363</Ontvanger>
+    <BerichtIdentificatie>MSG-315-INVALID</BerichtIdentificatie>
+    <DagtekeningBericht>2026-05-15</DagtekeningBericht>
+  </Header>
+  <Client>
+    <Bsn>123456782</Bsn>
+    <Naam>
+      <Achternaam>Janssen</Achternaam>
+    </Naam>
+    <Statusmelding>
+      <ToewijzingNummer>12345</ToewijzingNummer>
+      <!-- StatusCode intentionally omitted -->
+      <StatusDatum>15-05-2026</StatusDatum>
+    </Statusmelding>
+  </Client>
+</Bericht>

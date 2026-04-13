@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bericht>
+  <Header>
+    <BerichtCode>301</BerichtCode>
+    <BerichtVersie>3.2</BerichtVersie>
+    <Afzender>0363</Afzender>
+    <Ontvanger>12345678</Ontvanger>
+    <BerichtIdentificatie>MSG-301-001</BerichtIdentificatie>
+    <DagtekeningBericht>2026-04-12</DagtekeningBericht>
+  </Header>
+  <Client>
+    <Bsn>123456782</Bsn>
+    <Naam>
+      <Voornamen>Jan</Voornamen>
+      <Tussenvoegsels>van</Tussenvoegsels>
+      <Achternaam>Janssen</Achternaam>
+    </Naam>
+    <Geboortedatum>1980-01-15</Geboortedatum>
+    <Geslacht>1</Geslacht>
+    <Toewijzing>
+      <ToewijzingNummer>12345</ToewijzingNummer>
+      <ReferentieAanbieder>REF-001</ReferentieAanbieder>
+      <Product>
+        <Categorie>03</Categorie>
+        <Code>H532</Code>
+      </Product>
+      <Toewijzingsdatum>2026-04-12</Toewijzingsdatum>
+      <Ingangsdatum>2026-05-01</Ingangsdatum>
+      <Einddatum>2026-12-31</Einddatum>
+      <Omvang>
+        <Volume>8</Volume>
+        <Eenheid>uur</Eenheid>
+        <Frequentie>week</Frequentie>
+      </Omvang>
+      <RedenWijziging>01</RedenWijziging>
+    </Toewijzing>
+  </Client>
+</Bericht>

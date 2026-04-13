@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bericht>
+  <Header>
+    <BerichtCode>304</BerichtCode>
+    <BerichtVersie>3.2</BerichtVersie>
+    <Afzender>0363</Afzender>
+    <Ontvanger>12345678</Ontvanger>
+    <BerichtIdentificatie>MSG-304-001</BerichtIdentificatie>
+    <DagtekeningBericht>2026-04-12</DagtekeningBericht>
+    <GerefereerdBerichtCode>302</GerefereerdBerichtCode>
+    <GerefereerdBerichtIdentificatie>MSG-302-001</GerefereerdBerichtIdentificatie>
+  </Header>
+  <RetourCode>
+    <Code>0000</Code>
+    <Omschrijving>Bericht in goede orde ontvangen</Omschrijving>
+  </RetourCode>
+</Bericht>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Invalid: Mutatiecode is not a recognized value and Mutatiedatum is missing -->
+<Bericht>
+  <Header>
+    <BerichtCode>305</BerichtCode>
+    <BerichtVersie>3.2</BerichtVersie>
+    <Afzender>12345678</Afzender>
+    <Ontvanger>0363</Ontvanger>
+    <BerichtIdentificatie>MSG-305-INVALID</BerichtIdentificatie>
+    <DagtekeningBericht>2026-05-02</DagtekeningBericht>
+  </Header>
+  <Client>
+    <Bsn>123456782</Bsn>
+    <Naam>
+      <Achternaam>Janssen</Achternaam>
+    </Naam>
+    <Mutatie>
+      <ToewijzingNummer>12345</ToewijzingNummer>
+      <!-- Mutatiedatum intentionally omitted -->
+      <Mutatiecode>99</Mutatiecode>
+    </Mutatie>
+  </Client>
+</Bericht>

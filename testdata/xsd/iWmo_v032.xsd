@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Stub XSD for iWMO v3.2 — for testing purposes only.
+
+  The authoritative XSD schemas are published by iStandaarden at:
+  https://www.istandaarden.nl/iwmo/portlet-naar-de-lopende-releases/iwmo-3.2
+
+  This stub captures the high-level structure for documentation and tooling
+  reference. Runtime validation in this library is performed by Go struct
+  checks rather than XSD parsing; see validate.go.
+-->
+<xs:schema
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    elementFormDefault="unqualified"
+    attributeFormDefault="unqualified"
+    version="3.2">
+
+  <!-- ============================================================
+       Root element: shared across all iWMO message types.
+       BerichtCode in the Header determines which body elements apply.
+       ============================================================ -->
+  <xs:element name="Bericht">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Header"     type="HeaderType"/>
+        <xs:element name="Client"     type="ClientType"     minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element name="RetourCode" type="RetourCodeType" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- ============================================================
+       Header — common to all iWMO messages.
+       ============================================================ -->
+  <xs:complexType name="HeaderType">
+    <xs:sequence>
+      <xs:element name="BerichtCode"                    type="xs:string"/>
+      <xs:element name="BerichtVersie"                  type="xs:string"/>
+      <xs:element name="Afzender"                       type="xs:string"/>
+      <xs:element name="Ontvanger"                      type="xs:string"/>
+      <xs:element name="BerichtIdentificatie"           type="xs:string"/>
+      <xs:element name="DagtekeningBericht"             type="xs:date"/>
+      <xs:element name="GerefereerdBerichtCode"         type="xs:string" minOccurs="0"/>
+      <xs:element name="GerefereerdBerichtIdentificatie" type="xs:string" minOccurs="0"/>
+      <xs:element name="XsltVersie"                     type="xs:string" minOccurs="0"/>
+      <xs:element name="XsdVersie"                      type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ============================================================
+       Client — used by WMO301/302/303/305/315.
+       ============================================================ -->
+  <xs:complexType name="ClientType">
+    <xs:sequence>
+      <xs:element name="Bsn"               type="BsnType"/>
+      <xs:element name="Naam"              type="NaamType"/>
+      <xs:element name="Geboortedatum"     type="xs:date"   minOccurs="0"/>
+      <xs:element name="Geslacht"          type="xs:string" minOccurs="0"/>
+      <!-- Body elements depend on BerichtCode; all are optional at schema level. -->
+      <xs:element name="Toewijzing"        type="ToewijzingType"        minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="VerzoekToewijzing" type="VerzoekToewijzingType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Declaratieperiode" type="DeclaratieperiodeType" minOccurs="0"/>
+      <xs:element name="Prestatie"         type="PrestatieType"         minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Mutatie"           type="MutatieType"           minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Statusmelding"     type="StatusmeldingType"     minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ============================================================
+       Naam
+       ============================================================ -->
+  <xs:complexType name="NaamType">
+    <xs:sequence>
+      <xs:element name="Voornamen"       type="xs:string" minOccurs="0"/>
+      <xs:element name="Tussenvoegsels"  type="xs:string" minOccurs="0"/>
+      <xs:element name="Achternaam"      type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ============================================================
+       Product
+       ============================================================ -->
+  <xs:complexType name="ProductType">
+    <xs:sequence>
+      <xs:element name="Categorie" type="xs:string"/>
+      <xs:element name="Code"      type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ============================================================
+       Omvang
+       ============================================================ -->
+  <xs:complexType name="OmvangType">
+    <xs:sequence>
+      <xs:element name="Volume"     type="xs:string"/>
+      <xs:element name="Eenheid"   type="xs:string"/>
+      <xs:element name="Frequentie" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ============================================================
+       WMO301: Toewijzing
+       ============================================================ -->
+  <xs:complexType name="ToewijzingType">
+    <xs:sequence>
+      <xs:element name="ToewijzingNummer"    type="xs:string"/>
+      <xs:element name="ReferentieAanbieder" type="xs:string" minOccurs="0"/>
+      <xs:element name="Product"             type="ProductType"/>
+      <xs:element name="Toewijzingsdatum"    type="xs:date"   minOccurs="0"/>
+      <xs:element name="Ingangsdatum"        type="xs:date"/>
+      <xs:element name="Einddatum"           type="xs:date"   minOccurs="0"/>
+      <xs:element name="Omvang"              type="OmvangType" minOccurs="0"/>
+      <xs:element name="RedenWijziging"      type="xs:string" minOccurs="0"/>
+      <xs:element name="Commentaar"          type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ============================================================
+       WMO302: VerzoekToewijzing
+       ============================================================ -->
+  <xs:complexType name="VerzoekToewijzingType">
+    <xs:sequence>
+      <xs:element name="ReferentieAanbieder" type="xs:string"/>
+      <xs:element name="Product"             type="ProductType"/>
+      <xs:element name="Ingangsdatum"        type="xs:date"/>
+      <xs:element name="Einddatum"           type="xs:date"    minOccurs="0"/>
+      <xs:element name="Omvang"              type="OmvangType" minOccurs="0"/>
+      <xs:element name="Commentaar"          type="xs:string"  minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ============================================================
+       WMO303: Declaratieperiode + Prestatie
+       ============================================================ -->
+  <xs:complexType name="DeclaratieperiodeType">
+    <xs:sequence>
+      <xs:element name="Begindatum" type="xs:date"/>
+      <xs:element name="Einddatum"  type="xs:date"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PrestatieType">
+    <xs:sequence>
+      <xs:element name="ToewijzingNummer" type="xs:string"/>
+      <xs:element name="Product"          type="ProductType"/>
+      <xs:element name="Begindatum"       type="xs:date"/>
+      <xs:element name="Einddatum"        type="xs:date"/>
+      <xs:element name="Omvang"           type="OmvangType"/>
+      <xs:element name="Bedrag"           type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ============================================================
+       WMO304: RetourCode
+       ============================================================ -->
+  <xs:complexType name="RetourCodeType">
+    <xs:sequence>
+      <xs:element name="Code"         type="xs:string"/>
+      <xs:element name="Omschrijving" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ============================================================
+       WMO305: Mutatie
+       ============================================================ -->
+  <xs:complexType name="MutatieType">
+    <xs:sequence>
+      <xs:element name="ToewijzingNummer" type="xs:string"/>
+      <xs:element name="Mutatiedatum"     type="xs:date"/>
+      <!-- Mutatiecode: 01=Start, 02=Wijziging, 03=Stop -->
+      <xs:element name="Mutatiecode"      type="xs:string"/>
+      <xs:element name="Product"          type="ProductType" minOccurs="0"/>
+      <xs:element name="Begindatum"       type="xs:date"     minOccurs="0"/>
+      <xs:element name="Einddatum"        type="xs:date"     minOccurs="0"/>
+      <xs:element name="Commentaar"       type="xs:string"   minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ============================================================
+       WMO315: Statusmelding
+       ============================================================ -->
+  <xs:complexType name="StatusmeldingType">
+    <xs:sequence>
+      <xs:element name="ToewijzingNummer" type="xs:string"/>
+      <xs:element name="StatusCode"       type="xs:string"/>
+      <xs:element name="StatusDatum"      type="xs:date"/>
+      <xs:element name="Commentaar"       type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ============================================================
+       BSN: 9-digit string; elfproef validated at runtime.
+       ============================================================ -->
+  <xs:simpleType name="BsnType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\d{9}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

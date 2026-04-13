@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Invalid: missing ReferentieAanbieder and invalid BSN -->
+<Bericht>
+  <Header>
+    <BerichtCode>302</BerichtCode>
+    <BerichtVersie>3.2</BerichtVersie>
+    <Afzender>12345678</Afzender>
+    <Ontvanger>0363</Ontvanger>
+    <BerichtIdentificatie>MSG-302-INVALID</BerichtIdentificatie>
+    <DagtekeningBericht>2026-04-12</DagtekeningBericht>
+  </Header>
+  <Client>
+    <Bsn>000000001</Bsn>
+    <Naam>
+      <Achternaam>de Vries</Achternaam>
+    </Naam>
+    <VerzoekToewijzing>
+      <!-- ReferentieAanbieder intentionally omitted -->
+      <Product>
+        <Categorie>04</Categorie>
+        <Code>H533</Code>
+      </Product>
+      <Ingangsdatum>2026-05-01</Ingangsdatum>
+    </VerzoekToewijzing>
+  </Client>
+</Bericht>

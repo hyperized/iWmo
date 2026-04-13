@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bericht>
+  <Header>
+    <BerichtCode>302</BerichtCode>
+    <BerichtVersie>3.2</BerichtVersie>
+    <Afzender>12345678</Afzender>
+    <Ontvanger>0363</Ontvanger>
+    <BerichtIdentificatie>MSG-302-001</BerichtIdentificatie>
+    <DagtekeningBericht>2026-04-12</DagtekeningBericht>
+  </Header>
+  <Client>
+    <Bsn>123456782</Bsn>
+    <Naam>
+      <Voornamen>Maria</Voornamen>
+      <Achternaam>de Vries</Achternaam>
+    </Naam>
+    <Geboortedatum>1955-07-23</Geboortedatum>
+    <Geslacht>2</Geslacht>
+    <VerzoekToewijzing>
+      <ReferentieAanbieder>REF-302-001</ReferentieAanbieder>
+      <Product>
+        <Categorie>04</Categorie>
+        <Code>H533</Code>
+      </Product>
+      <Ingangsdatum>2026-05-01</Ingangsdatum>
+      <Einddatum>2026-12-31</Einddatum>
+      <Omvang>
+        <Volume>4</Volume>
+        <Eenheid>dagdeel</Eenheid>
+        <Frequentie>week</Frequentie>
+      </Omvang>
+      <Commentaar>Behoefte aan begeleiding dagactiviteiten</Commentaar>
+    </VerzoekToewijzing>
+  </Client>
+</Bericht>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Invalid: BSN fails elfproef and ToewijzingNummer is missing -->
+<Bericht>
+  <Header>
+    <BerichtCode>301</BerichtCode>
+    <BerichtVersie>3.2</BerichtVersie>
+    <Afzender>0363</Afzender>
+    <Ontvanger>12345678</Ontvanger>
+    <BerichtIdentificatie>MSG-301-INVALID</BerichtIdentificatie>
+    <DagtekeningBericht>2026-04-12</DagtekeningBericht>
+  </Header>
+  <Client>
+    <Bsn>123456789</Bsn>
+    <Naam>
+      <Achternaam>Janssen</Achternaam>
+    </Naam>
+    <Toewijzing>
+      <!-- ToewijzingNummer intentionally omitted -->
+      <Product>
+        <Categorie>03</Categorie>
+        <Code>H532</Code>
+      </Product>
+      <Ingangsdatum>2026-05-01</Ingangsdatum>
+    </Toewijzing>
+  </Client>
+</Bericht>

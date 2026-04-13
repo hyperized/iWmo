@@ -1,0 +1,40 @@
+linters:
+  enable-all: true
+  disable:
+    - depguard      # no dependency allowlist needed for a library
+    - execinquery   # deprecated linter
+    - gomnd         # renamed to mnd; avoid duplicate
+    - exportloopref # unnecessary since Go 1.22
+
+linters-settings:
+  funlen:
+    lines: 80
+    statements: 50
+
+  cyclop:
+    max-complexity: 10
+
+  varnamelen:
+    min-name-length: 2
+
+  tagliatelle:
+    case:
+      rules:
+        xml: pascal   # iWMO XSD uses PascalCase for all element names
+
+  wsl:
+    allow-cuddle-declarations: true
+
+  gci:
+    sections:
+      - standard
+      - default
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - funlen
+        - dupl
+        - wrapcheck
+        - goerr113
