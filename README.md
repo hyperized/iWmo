@@ -213,4 +213,8 @@ go test -bench=. -benchmem ./...
 
 ## License
 
-See [LICENSE](LICENSE) for details.
+This software is licensed under the [Business Source License 1.1](LICENSE).
+
+**Non-commercial use** (personal projects, education, evaluation, development) is permitted. **Commercial use** requires a paid license — contact the author for details.
+
+On 2036-04-14 the license converts to Apache 2.0.
