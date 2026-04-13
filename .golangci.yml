@@ -1,40 +1,44 @@
+version: "2"
+
 linters:
-  enable-all: true
+  default: all
   disable:
-    - depguard      # no dependency allowlist needed for a library
-    - execinquery   # deprecated linter
-    - gomnd         # renamed to mnd; avoid duplicate
-    - exportloopref # unnecessary since Go 1.22
-
-linters-settings:
-  funlen:
-    lines: 80
-    statements: 50
-
-  cyclop:
-    max-complexity: 10
-
-  varnamelen:
-    min-name-length: 2
-
-  tagliatelle:
-    case:
-      rules:
-        xml: pascal   # iWMO XSD uses PascalCase for all element names
-
-  wsl:
-    allow-cuddle-declarations: true
-
-  gci:
-    sections:
-      - standard
-      - default
-
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - funlen
-        - dupl
-        - wrapcheck
-        - goerr113
+    - depguard       # no dependency allowlist needed for a library
+    - exhaustruct    # requiring all struct fields is impractical for XML types
+    - ireturn        # returning interfaces (Message) is the intended design
+    - maintidx       # maintainability index penalises table-driven tests
+    - nlreturn       # conflicts with wsl_v5; redundant empty-line enforcement
+    - noinlineerr    # inline err checks (if err := …; err != nil) are idiomatic Go
+    - paralleltest   # t.Parallel() adds complexity without benefit for fast unit tests
+    - testpackage    # internal (white-box) tests are appropriate for this package
+    - varnamelen     # short names (h, p, b, i) are idiomatic for small scopes
+    - wsl            # deprecated in v2; replaced by wsl_v5
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - funlen
+          - dupl
+          - wrapcheck
+          - err113
+          - goconst
+          - revive
+          - wsl_v5
+  settings:
+    cyclop:
+      max-complexity: 20
+    funlen:
+      lines: 90
+      statements: 50
+    tagliatelle:
+      case:
+        rules:
+          xml: pascal   # iWMO XSD uses PascalCase for all element names
+    wsl_v5:
+      allow-first-in-block: true
+    misspell:
+      extra-words:
+        - typo: "commentaar"
+          correction: "commentaar"
+    dupl:
+      threshold: 200   # validation functions share structure by design

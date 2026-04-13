@@ -2,6 +2,7 @@ package iwmo
 
 import (
 	"encoding/xml"
+	"strings"
 	"testing"
 )
 
@@ -96,7 +97,7 @@ func TestNaam_OmitemptyTussenvoegsels(t *testing.T) {
 	}
 	// Tussenvoegsels is omitempty, so it should not appear in output.
 	xmlStr := string(data)
-	if contains(xmlStr, "<Tussenvoegsels>") {
+	if strings.Contains(xmlStr, "<Tussenvoegsels>") {
 		t.Error("expected <Tussenvoegsels> to be omitted when empty")
 	}
 }
@@ -149,17 +150,3 @@ func TestOmvang_MarshalUnmarshal(t *testing.T) {
 	}
 }
 
-// contains is a helper to avoid importing strings in test files.
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr ||
-		len(s) > 0 && indexStr(s, substr) >= 0)
-}
-
-func indexStr(s, sub string) int {
-	for i := 0; i <= len(s)-len(sub); i++ {
-		if s[i:i+len(sub)] == sub {
-			return i
-		}
-	}
-	return -1
-}

@@ -126,3 +126,17 @@ func TestWMO304_FromFile(t *testing.T) {
 		t.Errorf("Validate() error = %v", err)
 	}
 }
+
+func TestWMO304_InvalidFile_FailsValidation(t *testing.T) {
+	data, err := os.ReadFile("testdata/wmo304_invalid.xml")
+	if err != nil {
+		t.Fatalf("ReadFile: %v", err)
+	}
+	msg, err := DecodeAs[WMO304](data)
+	if err != nil {
+		t.Fatalf("DecodeAs[WMO304]() error = %v", err)
+	}
+	if err := msg.Validate(); err == nil {
+		t.Error("Validate() returned nil for invalid message, want error")
+	}
+}

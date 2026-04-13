@@ -19,88 +19,105 @@ func (m *WMO301) MessageType() string { return "WMO301" }
 // Validate checks all header fields and every client and assignment record.
 func (m *WMO301) Validate() error {
 	var errs ValidationErrors
+
 	errs = append(errs, validateHeader(m.Header)...)
+
 	if m.Header.BerichtCode != "301" {
 		errs = append(errs, ValidationError{
 			Field: "Header.BerichtCode", Code: "WRONG_CODE",
 			Message: "BerichtCode must be 301 for WMO301",
 		})
 	}
+
 	if len(m.Clienten) == 0 {
 		errs = append(errs, ValidationError{
 			Field: "Client", Code: "REQUIRED",
 			Message: "at least one Client element is required",
 		})
 	}
+
 	for i, cl := range m.Clienten {
 		f := fmt.Sprintf("Client[%d]", i)
 		errs = append(errs, validateWMO301Client(f, cl)...)
 	}
+
 	if len(errs) > 0 {
 		return errs
 	}
+
 	return nil
 }
 
 func validateWMO301Client(prefix string, cl WMO301Client) ValidationErrors {
 	var errs ValidationErrors
+
 	if !ValidateBSN(cl.Bsn) {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Bsn", Code: "INVALID_BSN",
 			Message: "BSN must be 9 digits passing the elfproef (11-check)",
 		})
 	}
+
 	if cl.Naam.Achternaam == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Naam.Achternaam", Code: "REQUIRED",
 			Message: "Achternaam is required",
 		})
 	}
+
 	if cl.Geboortedatum != "" && !ValidateDate(cl.Geboortedatum) {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Geboortedatum", Code: "INVALID_DATE",
 			Message: "Geboortedatum must be formatted YYYY-MM-DD",
 		})
 	}
+
 	if len(cl.Toewijzingen) == 0 {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Toewijzing", Code: "REQUIRED",
 			Message: "at least one Toewijzing element is required",
 		})
 	}
+
 	for j, tw := range cl.Toewijzingen {
 		tf := fmt.Sprintf("%s.Toewijzing[%d]", prefix, j)
 		errs = append(errs, validateToewijzing(tf, tw)...)
 	}
+
 	return errs
 }
 
 func validateToewijzing(prefix string, tw Toewijzing) ValidationErrors {
 	var errs ValidationErrors
+
 	if tw.ToewijzingNummer == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".ToewijzingNummer", Code: "REQUIRED",
 			Message: "ToewijzingNummer is required",
 		})
 	}
+
 	if tw.Product.Categorie == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Product.Categorie", Code: "REQUIRED",
 			Message: "Product.Categorie is required",
 		})
 	}
+
 	if tw.Product.Code == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Product.Code", Code: "REQUIRED",
 			Message: "Product.Code is required",
 		})
 	}
+
 	if tw.Toewijzingsdatum != "" && !ValidateDate(tw.Toewijzingsdatum) {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Toewijzingsdatum", Code: "INVALID_DATE",
 			Message: "Toewijzingsdatum must be formatted YYYY-MM-DD",
 		})
 	}
+
 	if tw.Ingangsdatum == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Ingangsdatum", Code: "REQUIRED",
@@ -112,6 +129,7 @@ func validateToewijzing(prefix string, tw Toewijzing) ValidationErrors {
 			Message: "Ingangsdatum must be formatted YYYY-MM-DD",
 		})
 	}
+
 	if tw.Einddatum != "" {
 		if !ValidateDate(tw.Einddatum) {
 			errs = append(errs, ValidationError{
@@ -125,6 +143,7 @@ func validateToewijzing(prefix string, tw Toewijzing) ValidationErrors {
 			})
 		}
 	}
+
 	return errs
 }
 

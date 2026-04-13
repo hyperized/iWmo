@@ -9,6 +9,9 @@ import (
 	"net/http"
 )
 
+// maxResponseBytes is the maximum number of bytes read from an HTTP response body.
+const maxResponseBytes = 10 << 20 // 10 MiB
+
 // Sender abstracts message transport. The default implementation uses HTTP(S),
 // but callers may substitute any backend (e.g. VECOZO message bus, file-based
 // exchange) by passing [WithSender] to [NewClient].
@@ -73,12 +76,15 @@ func NewClient(opts ...Option) (*Client, error) {
 	for _, opt := range opts {
 		opt(c)
 	}
+
 	if c.sender == nil && c.baseURL == "" {
 		return nil, fmt.Errorf("%w: WithBaseURL or WithSender is required", ErrConfiguration)
 	}
+
 	if c.sender == nil {
 		c.sender = &httpSender{client: c.httpClient, baseURL: c.baseURL}
 	}
+
 	return c, nil
 }
 
@@ -116,28 +122,35 @@ func (c *Client) sendMessage(ctx context.Context, msg Message) (*WMO304, error) 
 	if err := msg.Validate(); err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrInvalidMessage, err)
 	}
+
 	data, err := Encode(msg)
 	if err != nil {
 		return nil, err
 	}
+
 	c.logger.DebugContext(ctx, "sending iWMO message",
 		"type", msg.MessageType(),
 		"bytes", len(data),
 	)
+
 	resp, err := c.sender.Send(ctx, data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrTransport, err)
 	}
+
 	retour, err := DecodeAs[WMO304](resp)
 	if err != nil {
-		return nil, fmt.Errorf("%w: decoding WMO304 retour: %v", ErrTransport, err)
+		return nil, fmt.Errorf("%w: decoding WMO304 retour: %w", ErrTransport, err)
 	}
+
 	if verr := retour.Validate(); verr != nil {
 		return nil, fmt.Errorf("%w: invalid WMO304 retour: %w", ErrTransport, verr)
 	}
+
 	c.logger.DebugContext(ctx, "received WMO304 retour",
 		"codes", len(retour.RetourCodes),
 	)
+
 	return retour, nil
 }
 
@@ -151,15 +164,17 @@ type httpSender struct {
 func (s *httpSender) Send(ctx context.Context, data []byte) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.baseURL, bytes.NewReader(data))
 	if err != nil {
-		return nil, fmt.Errorf("%w: creating request: %v", ErrTransport, err)
+		return nil, fmt.Errorf("%w: creating request: %w", ErrTransport, err)
 	}
+
 	req.Header.Set("Content-Type", "application/xml; charset=utf-8")
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrTransport, err)
+		return nil, fmt.Errorf("%w: %w", ErrTransport, err)
 	}
-	defer resp.Body.Close()
+
+	defer func() { _ = resp.Body.Close() }()
 
 	switch {
 	case resp.StatusCode == http.StatusUnauthorized,
@@ -169,9 +184,10 @@ func (s *httpSender) Send(ctx context.Context, data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("%w: HTTP %d", ErrTransport, resp.StatusCode)
 	}
 
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes))
 	if err != nil {
-		return nil, fmt.Errorf("%w: reading response body: %v", ErrTransport, err)
+		return nil, fmt.Errorf("%w: reading response body: %w", ErrTransport, err)
 	}
+
 	return body, nil
 }

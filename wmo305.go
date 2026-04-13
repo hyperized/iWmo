@@ -20,26 +20,32 @@ func (m *WMO305) MessageType() string { return "WMO305" }
 // Validate checks all header fields and every client and mutatie record.
 func (m *WMO305) Validate() error {
 	var errs ValidationErrors
+
 	errs = append(errs, validateHeader(m.Header)...)
+
 	if m.Header.BerichtCode != "305" {
 		errs = append(errs, ValidationError{
 			Field: "Header.BerichtCode", Code: "WRONG_CODE",
 			Message: "BerichtCode must be 305 for WMO305",
 		})
 	}
+
 	if len(m.Clienten) == 0 {
 		errs = append(errs, ValidationError{
 			Field: "Client", Code: "REQUIRED",
 			Message: "at least one Client element is required",
 		})
 	}
+
 	for i, cl := range m.Clienten {
 		f := fmt.Sprintf("Client[%d]", i)
 		errs = append(errs, validateWMO305Client(f, cl)...)
 	}
+
 	if len(errs) > 0 {
 		return errs
 	}
+
 	return nil
 }
 
@@ -51,28 +57,33 @@ func validateWMO305Client(prefix string, cl WMO305Client) ValidationErrors {
 			Message: "BSN must be 9 digits passing the elfproef (11-check)",
 		})
 	}
+
 	if cl.Naam.Achternaam == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Naam.Achternaam", Code: "REQUIRED",
 			Message: "Achternaam is required",
 		})
 	}
+
 	if cl.Geboortedatum != "" && !ValidateDate(cl.Geboortedatum) {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Geboortedatum", Code: "INVALID_DATE",
 			Message: "Geboortedatum must be formatted YYYY-MM-DD",
 		})
 	}
+
 	if len(cl.Mutaties) == 0 {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Mutatie", Code: "REQUIRED",
 			Message: "at least one Mutatie element is required",
 		})
 	}
+
 	for j, mu := range cl.Mutaties {
 		mf := fmt.Sprintf("%s.Mutatie[%d]", prefix, j)
 		errs = append(errs, validateMutatie(mf, mu)...)
 	}
+
 	return errs
 }
 
@@ -84,6 +95,7 @@ func validateMutatie(prefix string, mu Mutatie) ValidationErrors {
 			Message: "ToewijzingNummer is required",
 		})
 	}
+
 	if mu.Mutatiedatum == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Mutatiedatum", Code: "REQUIRED",
@@ -95,6 +107,7 @@ func validateMutatie(prefix string, mu Mutatie) ValidationErrors {
 			Message: "Mutatiedatum must be formatted YYYY-MM-DD",
 		})
 	}
+
 	switch mu.Mutatiecode {
 	case "01":
 		if mu.Begindatum == "" {
@@ -128,24 +141,28 @@ func validateMutatie(prefix string, mu Mutatie) ValidationErrors {
 			Message: "Mutatiecode must be 01 (start), 02 (wijziging), or 03 (stop)",
 		})
 	}
+
 	if mu.Begindatum != "" && !ValidateDate(mu.Begindatum) {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Begindatum", Code: "INVALID_DATE",
 			Message: "Begindatum must be formatted YYYY-MM-DD",
 		})
 	}
+
 	if mu.Einddatum != "" && !ValidateDate(mu.Einddatum) {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Einddatum", Code: "INVALID_DATE",
 			Message: "Einddatum must be formatted YYYY-MM-DD",
 		})
 	}
+
 	if mu.Begindatum != "" && mu.Einddatum != "" && !ValidatePeriod(mu.Begindatum, mu.Einddatum) {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Einddatum", Code: "INVALID_PERIOD",
 			Message: "Einddatum must be on or after Begindatum",
 		})
 	}
+
 	return errs
 }
 

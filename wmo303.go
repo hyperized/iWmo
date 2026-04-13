@@ -19,26 +19,32 @@ func (m *WMO303) MessageType() string { return "WMO303" }
 // Validate checks all header fields and every client and prestatie record.
 func (m *WMO303) Validate() error {
 	var errs ValidationErrors
+
 	errs = append(errs, validateHeader(m.Header)...)
+
 	if m.Header.BerichtCode != "303" {
 		errs = append(errs, ValidationError{
 			Field: "Header.BerichtCode", Code: "WRONG_CODE",
 			Message: "BerichtCode must be 303 for WMO303",
 		})
 	}
+
 	if len(m.Clienten) == 0 {
 		errs = append(errs, ValidationError{
 			Field: "Client", Code: "REQUIRED",
 			Message: "at least one Client element is required",
 		})
 	}
+
 	for i, cl := range m.Clienten {
 		f := fmt.Sprintf("Client[%d]", i)
 		errs = append(errs, validateWMO303Client(f, cl)...)
 	}
+
 	if len(errs) > 0 {
 		return errs
 	}
+
 	return nil
 }
 
@@ -50,18 +56,21 @@ func validateWMO303Client(prefix string, cl WMO303Client) ValidationErrors {
 			Message: "BSN must be 9 digits passing the elfproef (11-check)",
 		})
 	}
+
 	if cl.Naam.Achternaam == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Naam.Achternaam", Code: "REQUIRED",
 			Message: "Achternaam is required",
 		})
 	}
+
 	if cl.Geboortedatum != "" && !ValidateDate(cl.Geboortedatum) {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Geboortedatum", Code: "INVALID_DATE",
 			Message: "Geboortedatum must be formatted YYYY-MM-DD",
 		})
 	}
+
 	if cl.Declaratieperiode.Begindatum == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Declaratieperiode.Begindatum", Code: "REQUIRED",
@@ -73,6 +82,7 @@ func validateWMO303Client(prefix string, cl WMO303Client) ValidationErrors {
 			Message: "Declaratieperiode.Begindatum must be formatted YYYY-MM-DD",
 		})
 	}
+
 	if cl.Declaratieperiode.Einddatum == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Declaratieperiode.Einddatum", Code: "REQUIRED",
@@ -84,6 +94,7 @@ func validateWMO303Client(prefix string, cl WMO303Client) ValidationErrors {
 			Message: "Declaratieperiode.Einddatum must be formatted YYYY-MM-DD",
 		})
 	}
+
 	if cl.Declaratieperiode.Begindatum != "" && cl.Declaratieperiode.Einddatum != "" {
 		if !ValidatePeriod(cl.Declaratieperiode.Begindatum, cl.Declaratieperiode.Einddatum) {
 			errs = append(errs, ValidationError{
@@ -92,16 +103,19 @@ func validateWMO303Client(prefix string, cl WMO303Client) ValidationErrors {
 			})
 		}
 	}
+
 	if len(cl.Prestaties) == 0 {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Prestatie", Code: "REQUIRED",
 			Message: "at least one Prestatie element is required",
 		})
 	}
+
 	for j, p := range cl.Prestaties {
 		pf := fmt.Sprintf("%s.Prestatie[%d]", prefix, j)
 		errs = append(errs, validatePrestatie(pf, p)...)
 	}
+
 	return errs
 }
 
@@ -113,18 +127,21 @@ func validatePrestatie(prefix string, p Prestatie) ValidationErrors {
 			Message: "ToewijzingNummer is required",
 		})
 	}
+
 	if p.Product.Categorie == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Product.Categorie", Code: "REQUIRED",
 			Message: "Product.Categorie is required",
 		})
 	}
+
 	if p.Product.Code == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Product.Code", Code: "REQUIRED",
 			Message: "Product.Code is required",
 		})
 	}
+
 	if p.Begindatum == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Begindatum", Code: "REQUIRED",
@@ -136,6 +153,7 @@ func validatePrestatie(prefix string, p Prestatie) ValidationErrors {
 			Message: "Begindatum must be formatted YYYY-MM-DD",
 		})
 	}
+
 	if p.Einddatum == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Einddatum", Code: "REQUIRED",
@@ -147,6 +165,7 @@ func validatePrestatie(prefix string, p Prestatie) ValidationErrors {
 			Message: "Einddatum must be formatted YYYY-MM-DD",
 		})
 	}
+
 	if p.Begindatum != "" && p.Einddatum != "" {
 		if !ValidatePeriod(p.Begindatum, p.Einddatum) {
 			errs = append(errs, ValidationError{
@@ -155,30 +174,35 @@ func validatePrestatie(prefix string, p Prestatie) ValidationErrors {
 			})
 		}
 	}
+
 	if p.Omvang.Volume == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Omvang.Volume", Code: "REQUIRED",
 			Message: "Omvang.Volume is required",
 		})
 	}
+
 	if p.Omvang.Eenheid == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Omvang.Eenheid", Code: "REQUIRED",
 			Message: "Omvang.Eenheid is required",
 		})
 	}
+
 	if p.Omvang.Frequentie == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Omvang.Frequentie", Code: "REQUIRED",
 			Message: "Omvang.Frequentie is required",
 		})
 	}
+
 	if p.Bedrag == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Bedrag", Code: "REQUIRED",
 			Message: "Bedrag is required",
 		})
 	}
+
 	return errs
 }
 

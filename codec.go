@@ -1,7 +1,6 @@
 package iwmo
 
 import (
-	"bytes"
 	"encoding/xml"
 	"fmt"
 )
@@ -11,36 +10,32 @@ import (
 func Encode(msg Message) ([]byte, error) {
 	b, err := xml.Marshal(msg)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalidMessage, err)
+		return nil, fmt.Errorf("%w: %w", ErrInvalidMessage, err)
 	}
-	return append([]byte(xml.Header), b...), nil
+
+	buf := make([]byte, 0, len(xml.Header)+len(b))
+	buf = append(buf, xml.Header...)
+	buf = append(buf, b...)
+
+	return buf, nil
 }
 
-// sniffBerichtCode performs a byte-level scan to extract the BerichtCode value
-// from raw XML, avoiding a full unmarshal on the happy path.
-func sniffBerichtCode(data []byte) string {
-	start := bytes.Index(data, []byte("<BerichtCode>"))
-	if start < 0 {
-		return ""
-	}
-	start += len("<BerichtCode>")
-	end := bytes.Index(data[start:], []byte("</BerichtCode>"))
-	if end < 0 {
-		return ""
-	}
-	return string(bytes.TrimSpace(data[start : start+end]))
-}
-
-// Decode sniffs the BerichtCode in the XML to determine the concrete message
-// type, then fully decodes into that type and returns it as a Message.
+// Decode inspects the BerichtCode in the XML header to determine the concrete
+// message type, then fully decodes into that type and returns it as a Message.
 //
-// For known BerichtCodes the XML is parsed only once. For unknown or absent
-// codes a fallback unmarshal is performed to surface a proper XML parse error.
+// For known BerichtCodes the XML is parsed twice: once to sniff the code, once
+// to decode into the concrete struct. For unknown or absent codes, the sniff
+// parse is the only one performed.
 //
 // Returns [ErrUnknownMessage] if the BerichtCode does not match any known type.
 // Returns [ErrInvalidMessage] if the XML cannot be parsed.
 func Decode(data []byte) (Message, error) {
-	switch sniffBerichtCode(data) {
+	var peek berichtPeek
+	if err := xml.Unmarshal(data, &peek); err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrInvalidMessage, err)
+	}
+
+	switch peek.Header.BerichtCode {
 	case "301":
 		return DecodeAs[WMO301](data)
 	case "302":
@@ -54,12 +49,6 @@ func Decode(data []byte) (Message, error) {
 	case "315":
 		return DecodeAs[WMO315](data)
 	default:
-		// Code not found or unrecognised; fall back to a full unmarshal to
-		// surface a proper XML parse error or report the unknown code.
-		var peek berichtPeek
-		if err := xml.Unmarshal(data, &peek); err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrInvalidMessage, err)
-		}
 		return nil, fmt.Errorf("%w: BerichtCode %q", ErrUnknownMessage, peek.Header.BerichtCode)
 	}
 }
@@ -71,7 +60,8 @@ func Decode(data []byte) (Message, error) {
 func DecodeAs[T any](data []byte) (*T, error) {
 	var target T
 	if err := xml.Unmarshal(data, &target); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalidMessage, err)
+		return nil, fmt.Errorf("%w: %w", ErrInvalidMessage, err)
 	}
+
 	return &target, nil
 }

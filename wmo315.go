@@ -20,26 +20,32 @@ func (m *WMO315) MessageType() string { return "WMO315" }
 // Validate checks all header fields and every client and statusmelding record.
 func (m *WMO315) Validate() error {
 	var errs ValidationErrors
+
 	errs = append(errs, validateHeader(m.Header)...)
+
 	if m.Header.BerichtCode != "315" {
 		errs = append(errs, ValidationError{
 			Field: "Header.BerichtCode", Code: "WRONG_CODE",
 			Message: "BerichtCode must be 315 for WMO315",
 		})
 	}
+
 	if len(m.Clienten) == 0 {
 		errs = append(errs, ValidationError{
 			Field: "Client", Code: "REQUIRED",
 			Message: "at least one Client element is required",
 		})
 	}
+
 	for i, cl := range m.Clienten {
 		f := fmt.Sprintf("Client[%d]", i)
 		errs = append(errs, validateWMO315Client(f, cl)...)
 	}
+
 	if len(errs) > 0 {
 		return errs
 	}
+
 	return nil
 }
 
@@ -51,28 +57,33 @@ func validateWMO315Client(prefix string, cl WMO315Client) ValidationErrors {
 			Message: "BSN must be 9 digits passing the elfproef (11-check)",
 		})
 	}
+
 	if cl.Naam.Achternaam == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Naam.Achternaam", Code: "REQUIRED",
 			Message: "Achternaam is required",
 		})
 	}
+
 	if cl.Geboortedatum != "" && !ValidateDate(cl.Geboortedatum) {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Geboortedatum", Code: "INVALID_DATE",
 			Message: "Geboortedatum must be formatted YYYY-MM-DD",
 		})
 	}
+
 	if len(cl.Statusmeldingen) == 0 {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".Statusmelding", Code: "REQUIRED",
 			Message: "at least one Statusmelding element is required",
 		})
 	}
+
 	for j, sm := range cl.Statusmeldingen {
 		sf := fmt.Sprintf("%s.Statusmelding[%d]", prefix, j)
 		errs = append(errs, validateStatusmeldingRecord(sf, sm)...)
 	}
+
 	return errs
 }
 
@@ -84,12 +95,14 @@ func validateStatusmeldingRecord(prefix string, sm StatusmeldingRecord) Validati
 			Message: "ToewijzingNummer is required",
 		})
 	}
+
 	if sm.StatusCode == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".StatusCode", Code: "REQUIRED",
 			Message: "StatusCode is required",
 		})
 	}
+
 	if sm.StatusDatum == "" {
 		errs = append(errs, ValidationError{
 			Field: prefix + ".StatusDatum", Code: "REQUIRED",
@@ -101,6 +114,7 @@ func validateStatusmeldingRecord(prefix string, sm StatusmeldingRecord) Validati
 			Message: "StatusDatum must be formatted YYYY-MM-DD",
 		})
 	}
+
 	return errs
 }
 

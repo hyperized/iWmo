@@ -32,6 +32,7 @@ func (ve ValidationErrors) Error() string {
 	for i, e := range ve {
 		msgs[i] = e.Error()
 	}
+
 	return strings.Join(msgs, "; ")
 }
 
@@ -42,6 +43,12 @@ func parseDate(s string) (time.Time, bool) {
 	return ts, err == nil
 }
 
+// BSN length and elfproef constants.
+const (
+	bsnLength    = 9 // A BSN is exactly 9 digits.
+	bsnLastIndex = 8 // Index of the last digit (uses weight -1).
+)
+
 // ValidateBSN validates a Dutch Burgerservicenummer (BSN) using the elfproef
 // (11-proof) algorithm.
 //
@@ -49,21 +56,26 @@ func parseDate(s string) (time.Time, bool) {
 // multipliers [9, 8, 7, 6, 5, 4, 3, 2] for digits 0–7 and -1 for digit 8.
 // The sum must be positive and divisible by 11.
 func ValidateBSN(bsn string) bool {
-	if len(bsn) != 9 {
+	if len(bsn) != bsnLength {
 		return false
 	}
+
 	sum := 0
+
 	for i, ch := range bsn {
 		if ch < '0' || ch > '9' {
 			return false
 		}
+
 		d := int(ch - '0')
-		if i < 8 {
-			sum += d * (9 - i)
+
+		if i < bsnLastIndex {
+			sum += d * (bsnLength - i)
 		} else {
 			sum -= d
 		}
 	}
+
 	return sum > 0 && sum%11 == 0
 }
 
@@ -81,10 +93,12 @@ func ValidatePeriod(begin, end string) bool {
 	if !ok {
 		return false
 	}
+
 	e, ok := parseDate(end)
 	if !ok {
 		return false
 	}
+
 	return !b.After(e)
 }
 
@@ -92,36 +106,42 @@ func ValidatePeriod(begin, end string) bool {
 // It is called from each message type's Validate() method.
 func validateHeader(h Header) ValidationErrors {
 	var errs ValidationErrors
+
 	if h.BerichtCode == "" {
 		errs = append(errs, ValidationError{
 			Field: "Header.BerichtCode", Code: "REQUIRED",
 			Message: "BerichtCode is required",
 		})
 	}
+
 	if h.BerichtVersie == "" {
 		errs = append(errs, ValidationError{
 			Field: "Header.BerichtVersie", Code: "REQUIRED",
 			Message: "BerichtVersie is required",
 		})
 	}
+
 	if h.Afzender == "" {
 		errs = append(errs, ValidationError{
 			Field: "Header.Afzender", Code: "REQUIRED",
 			Message: "Afzender is required",
 		})
 	}
+
 	if h.Ontvanger == "" {
 		errs = append(errs, ValidationError{
 			Field: "Header.Ontvanger", Code: "REQUIRED",
 			Message: "Ontvanger is required",
 		})
 	}
+
 	if h.BerichtIdentificatie == "" {
 		errs = append(errs, ValidationError{
 			Field: "Header.BerichtIdentificatie", Code: "REQUIRED",
 			Message: "BerichtIdentificatie is required",
 		})
 	}
+
 	if h.DagtekeningBericht == "" {
 		errs = append(errs, ValidationError{
 			Field: "Header.DagtekeningBericht", Code: "REQUIRED",
@@ -133,5 +153,6 @@ func validateHeader(h Header) ValidationErrors {
 			Message: "DagtekeningBericht must be formatted YYYY-MM-DD",
 		})
 	}
+
 	return errs
 }

@@ -144,8 +144,8 @@ func TestEncode_MarshalError(t *testing.T) {
 }
 
 func TestDecode_TruncatedBerichtCodeTag(t *testing.T) {
-	// XML has the opening <BerichtCode> tag but no closing tag; sniffBerichtCode
-	// returns "" and Decode falls back to full unmarshal which fails.
+	// Truncated XML: the <BerichtCode> element is never closed, so
+	// xml.Unmarshal fails and Decode returns ErrInvalidMessage.
 	data := []byte(`<?xml version="1.0"?><Bericht><Header><BerichtCode>301`)
 	_, err := Decode(data)
 	if err == nil {
