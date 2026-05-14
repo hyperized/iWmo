@@ -113,6 +113,10 @@ if err := msg.Validate(); err != nil {
 }
 ```
 
+Validation error messages are in Dutch, since the only audience is Dutch
+*gemeenten* and *zorgaanbieders* — e.g. `"Achternaam is verplicht"`,
+`"Einddatum moet op of na Begindatum liggen"`.
+
 Standalone validation helpers are also available:
 
 ```go
@@ -121,9 +125,14 @@ iwmo.ValidateDate("2026-05-01")        // true  (YYYY-MM-DD)
 iwmo.ValidatePeriod("2026-05-01", "2026-12-31") // true  (begin <= end)
 ```
 
+`Geslacht` is validated against an allow-list per spec: `""`, `"0"` (unknown),
+`"1"` (male), `"2"` (female), `"9"` (unspecified).
+
 ### Custom transport
 
-The default transport uses HTTP POST. Provide a custom `Sender` for alternative backends (VECOZO, file-based exchange, etc.):
+The default transport uses HTTP POST with a 30s request timeout — override
+via `WithHTTPClient`. Provide a custom `Sender` for alternative backends
+(VECOZO, file-based exchange, etc.):
 
 ```go
 client, err := iwmo.NewClient(
@@ -154,17 +163,24 @@ The library defines five sentinel errors for use with `errors.Is`:
 
 ## Testing
 
-```sh
-# Unit tests
-go test ./...
+A `Makefile` ships the common targets; `make` (default) runs the unit tests.
 
-# With race detector
-go test -race ./...
+```sh
+make                    # go test ./...
+make test-race          # race detector
+make test-coverage      # 100% statement coverage is enforced in CI
+make lint               # golangci-lint
+make fuzz               # 30s of FuzzDecode
 
 # Integration tests (requires env vars)
 IWMO_BASE_URL=https://... IWMO_AGB_CODE=12345678 IWMO_GEMEENTE=0363 \
-  go test -tags integration -v ./...
+  make test-integration
 ```
+
+Tests use the internal/external package split: public-API tests live in
+`*_external_test.go` (`package iwmo_test`); only tests that touch unexported
+symbols stay in `*_test.go` (`package iwmo`). Fuzz targets cover `Decode`
+and `ValidateBSN`.
 
 ## Benchmarks
 

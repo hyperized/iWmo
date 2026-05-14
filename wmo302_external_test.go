@@ -1,34 +1,36 @@
-package iwmo
+package iwmo_test
 
 import (
 	"errors"
 	"os"
 	"testing"
+
+	"github.com/hyperized/iwmo"
 )
 
 func TestWMO302_MessageType(t *testing.T) {
-	m := &WMO302{}
-	if got := m.MessageType(); got != "WMO302" {
-		t.Errorf("MessageType() = %q, want %q", got, "WMO302")
+	m := &iwmo.WMO302{}
+	if got := m.MessageType(); got != iwmo.MessageTypeWMO302 {
+		t.Errorf("MessageType() = %q, want %q", got, iwmo.MessageTypeWMO302)
 	}
 }
 
 func TestWMO302_Validate(t *testing.T) {
 	tests := []struct {
 		name    string
-		msg     *WMO302
+		msg     *iwmo.WMO302
 		wantErr bool
 		errCode string
 	}{
 		{
 			name:    "valid message",
-			msg:     validWMO302(),
+			msg:     iwmo.ValidWMO302(),
 			wantErr: false,
 		},
 		{
 			name: "wrong BerichtCode",
-			msg: func() *WMO302 {
-				m := validWMO302()
+			msg: func() *iwmo.WMO302 {
+				m := iwmo.ValidWMO302()
 				m.Header.BerichtCode = "301"
 				return m
 			}(),
@@ -37,8 +39,8 @@ func TestWMO302_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid BSN",
-			msg: func() *WMO302 {
-				m := validWMO302()
+			msg: func() *iwmo.WMO302 {
+				m := iwmo.ValidWMO302()
 				m.Clienten[0].Bsn = "000000001"
 				return m
 			}(),
@@ -47,8 +49,8 @@ func TestWMO302_Validate(t *testing.T) {
 		},
 		{
 			name: "missing Achternaam",
-			msg: func() *WMO302 {
-				m := validWMO302()
+			msg: func() *iwmo.WMO302 {
+				m := iwmo.ValidWMO302()
 				m.Clienten[0].Naam.Achternaam = ""
 				return m
 			}(),
@@ -57,8 +59,8 @@ func TestWMO302_Validate(t *testing.T) {
 		},
 		{
 			name: "no VerzoekToewijzingen",
-			msg: func() *WMO302 {
-				m := validWMO302()
+			msg: func() *iwmo.WMO302 {
+				m := iwmo.ValidWMO302()
 				m.Clienten[0].VerzoekToewijzingen = nil
 				return m
 			}(),
@@ -67,8 +69,8 @@ func TestWMO302_Validate(t *testing.T) {
 		},
 		{
 			name: "missing ReferentieAanbieder",
-			msg: func() *WMO302 {
-				m := validWMO302()
+			msg: func() *iwmo.WMO302 {
+				m := iwmo.ValidWMO302()
 				m.Clienten[0].VerzoekToewijzingen[0].ReferentieAanbieder = ""
 				return m
 			}(),
@@ -77,8 +79,8 @@ func TestWMO302_Validate(t *testing.T) {
 		},
 		{
 			name: "Einddatum before Ingangsdatum",
-			msg: func() *WMO302 {
-				m := validWMO302()
+			msg: func() *iwmo.WMO302 {
+				m := iwmo.ValidWMO302()
 				m.Clienten[0].VerzoekToewijzingen[0].Ingangsdatum = "2026-12-31"
 				m.Clienten[0].VerzoekToewijzingen[0].Einddatum = "2026-01-01"
 				return m
@@ -88,8 +90,8 @@ func TestWMO302_Validate(t *testing.T) {
 		},
 		{
 			name: "no clients",
-			msg: func() *WMO302 {
-				m := validWMO302()
+			msg: func() *iwmo.WMO302 {
+				m := iwmo.ValidWMO302()
 				m.Clienten = nil
 				return m
 			}(),
@@ -98,8 +100,8 @@ func TestWMO302_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid Geboortedatum",
-			msg: func() *WMO302 {
-				m := validWMO302()
+			msg: func() *iwmo.WMO302 {
+				m := iwmo.ValidWMO302()
 				m.Clienten[0].Geboortedatum = "15-01-1980"
 				return m
 			}(),
@@ -107,9 +109,19 @@ func TestWMO302_Validate(t *testing.T) {
 			errCode: "INVALID_DATE",
 		},
 		{
+			name: "invalid Geslacht",
+			msg: func() *iwmo.WMO302 {
+				m := iwmo.ValidWMO302()
+				m.Clienten[0].Geslacht = "X"
+				return m
+			}(),
+			wantErr: true,
+			errCode: "INVALID_VALUE",
+		},
+		{
 			name: "missing Product.Categorie",
-			msg: func() *WMO302 {
-				m := validWMO302()
+			msg: func() *iwmo.WMO302 {
+				m := iwmo.ValidWMO302()
 				m.Clienten[0].VerzoekToewijzingen[0].Product.Categorie = ""
 				return m
 			}(),
@@ -118,8 +130,8 @@ func TestWMO302_Validate(t *testing.T) {
 		},
 		{
 			name: "missing Product.Code",
-			msg: func() *WMO302 {
-				m := validWMO302()
+			msg: func() *iwmo.WMO302 {
+				m := iwmo.ValidWMO302()
 				m.Clienten[0].VerzoekToewijzingen[0].Product.Code = ""
 				return m
 			}(),
@@ -128,8 +140,8 @@ func TestWMO302_Validate(t *testing.T) {
 		},
 		{
 			name: "missing Ingangsdatum",
-			msg: func() *WMO302 {
-				m := validWMO302()
+			msg: func() *iwmo.WMO302 {
+				m := iwmo.ValidWMO302()
 				m.Clienten[0].VerzoekToewijzingen[0].Ingangsdatum = ""
 				return m
 			}(),
@@ -138,8 +150,8 @@ func TestWMO302_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid Ingangsdatum format",
-			msg: func() *WMO302 {
-				m := validWMO302()
+			msg: func() *iwmo.WMO302 {
+				m := iwmo.ValidWMO302()
 				m.Clienten[0].VerzoekToewijzingen[0].Ingangsdatum = "01-05-2026"
 				return m
 			}(),
@@ -148,8 +160,8 @@ func TestWMO302_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid Einddatum format",
-			msg: func() *WMO302 {
-				m := validWMO302()
+			msg: func() *iwmo.WMO302 {
+				m := iwmo.ValidWMO302()
 				m.Clienten[0].VerzoekToewijzingen[0].Einddatum = "31-12-2026"
 				return m
 			}(),
@@ -165,7 +177,7 @@ func TestWMO302_Validate(t *testing.T) {
 				return
 			}
 			if tt.wantErr && tt.errCode != "" {
-				var ve ValidationErrors
+				var ve iwmo.ValidationErrors
 				if !errors.As(err, &ve) {
 					t.Fatalf("expected ValidationErrors, got %T", err)
 				}
@@ -185,12 +197,12 @@ func TestWMO302_Validate(t *testing.T) {
 }
 
 func TestWMO302_MarshalUnmarshal(t *testing.T) {
-	original := validWMO302()
-	data, err := Encode(original)
+	original := iwmo.ValidWMO302()
+	data, err := iwmo.Encode(original)
 	if err != nil {
 		t.Fatalf("Encode() error = %v", err)
 	}
-	decoded, err := DecodeAs[WMO302](data)
+	decoded, err := iwmo.DecodeAs[iwmo.WMO302](data)
 	if err != nil {
 		t.Fatalf("DecodeAs[WMO302]() error = %v", err)
 	}
@@ -211,7 +223,7 @@ func TestWMO302_FromFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadFile: %v", err)
 	}
-	msg, err := DecodeAs[WMO302](data)
+	msg, err := iwmo.DecodeAs[iwmo.WMO302](data)
 	if err != nil {
 		t.Fatalf("DecodeAs[WMO302]() error = %v", err)
 	}
@@ -225,11 +237,95 @@ func TestWMO302_InvalidFile_FailsValidation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadFile: %v", err)
 	}
-	msg, err := DecodeAs[WMO302](data)
+	msg, err := iwmo.DecodeAs[iwmo.WMO302](data)
 	if err != nil {
 		t.Fatalf("DecodeAs[WMO302]() error = %v", err)
 	}
 	if err := msg.Validate(); err == nil {
 		t.Error("Validate() returned nil for invalid message, want error")
+	}
+}
+
+func TestWMO302_Validate_MultipleClients(t *testing.T) {
+	m := iwmo.ValidWMO302()
+	m.Clienten = append(m.Clienten, iwmo.WMO302Client{
+		Bsn:  "900212640",
+		Naam: iwmo.Naam{Achternaam: "De Vries"},
+		VerzoekToewijzingen: []iwmo.VerzoekToewijzing{
+			{
+				ReferentieAanbieder: "REF-002",
+				Product:             iwmo.Product{Categorie: "03", Code: "H533"},
+				Ingangsdatum:        "2026-06-01",
+			},
+		},
+	})
+	if err := m.Validate(); err != nil {
+		t.Errorf("Validate() error = %v, want nil for valid multi-client message", err)
+	}
+}
+
+func TestWMO302_Validate_EmptyMessage(t *testing.T) {
+	m := &iwmo.WMO302{}
+	err := m.Validate()
+	if err == nil {
+		t.Fatal("Validate() error = nil for empty WMO302")
+	}
+	var ve iwmo.ValidationErrors
+	if !errors.As(err, &ve) {
+		t.Fatalf("expected ValidationErrors, got %T", err)
+	}
+	if len(ve) < 3 {
+		t.Errorf("expected at least 3 validation errors for empty WMO302, got %d: %v", len(ve), ve)
+	}
+}
+
+func TestWMO302_Validate_EinddatumWithInvalidIngangsdatum(t *testing.T) {
+	// When Ingangsdatum is invalid and Einddatum is valid, validation
+	// produces both INVALID_DATE for Ingangsdatum and INVALID_PERIOD
+	// because ValidatePeriod fails on the unparseable Ingangsdatum.
+	m := iwmo.ValidWMO302()
+	m.Clienten[0].VerzoekToewijzingen[0].Ingangsdatum = "bad"
+	m.Clienten[0].VerzoekToewijzingen[0].Einddatum = "2026-12-31"
+	err := m.Validate()
+	if err == nil {
+		t.Fatal("Validate() error = nil, want error for invalid Ingangsdatum")
+	}
+	var ve iwmo.ValidationErrors
+	if !errors.As(err, &ve) {
+		t.Fatalf("expected ValidationErrors, got %T", err)
+	}
+	foundDate := false
+	foundPeriod := false
+	for _, e := range ve {
+		if e.Code == "INVALID_DATE" {
+			foundDate = true
+		}
+		if e.Code == "INVALID_PERIOD" {
+			foundPeriod = true
+		}
+	}
+	if !foundDate {
+		t.Error("expected INVALID_DATE for invalid Ingangsdatum")
+	}
+	if !foundPeriod {
+		t.Error("expected INVALID_PERIOD when Ingangsdatum is unparseable and Einddatum is valid")
+	}
+}
+
+func TestWMO302_Validate_WithOptionalOmvang(t *testing.T) {
+	m := iwmo.ValidWMO302()
+	m.Clienten[0].VerzoekToewijzingen[0].Omvang = &iwmo.Omvang{
+		Volume: "4", Eenheid: "uur", Frequentie: "week",
+	}
+	if err := m.Validate(); err != nil {
+		t.Errorf("Validate() error = %v, want nil for message with Omvang", err)
+	}
+}
+
+func TestWMO302_Validate_WithValidEinddatum(t *testing.T) {
+	m := iwmo.ValidWMO302()
+	m.Clienten[0].VerzoekToewijzingen[0].Einddatum = "2026-12-31"
+	if err := m.Validate(); err != nil {
+		t.Errorf("Validate() error = %v, want nil", err)
 	}
 }

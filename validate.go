@@ -80,9 +80,27 @@ func ValidateBSN(bsn string) bool {
 }
 
 // ValidateDate reports whether s is a valid ISO 8601 date in YYYY-MM-DD format.
+//
+// Strict: the date must be zero-padded (e.g. "2026-01-05", not "2026-1-5"),
+// follow Gregorian calendar rules, and contain no time component.
 func ValidateDate(s string) bool {
 	_, ok := parseDate(s)
 	return ok
+}
+
+// validateGeslacht enforces the Geslacht allow-list. The field is optional in
+// every iWMO message (XSD lets it be absent), but when present it must be one
+// of the values defined by NEN 1888: 0 unknown, 1 male, 2 female, 9 unspecified.
+func validateGeslacht(field, value string) ValidationErrors {
+	switch value {
+	case "", "0", "1", "2", "9":
+		return nil
+	default:
+		return ValidationErrors{{
+			Field: field, Code: codeInvalidValue,
+			Message: msgGeslachtInvalid,
+		}}
+	}
 }
 
 // ValidatePeriod reports whether begin is on or before end.
@@ -109,48 +127,48 @@ func validateHeader(h Header) ValidationErrors {
 
 	if h.BerichtCode == "" {
 		errs = append(errs, ValidationError{
-			Field: "Header.BerichtCode", Code: "REQUIRED",
-			Message: "BerichtCode is required",
+			Field: msgFieldHeaderBerichtCode, Code: codeRequired,
+			Message: "BerichtCode is verplicht",
 		})
 	}
 
 	if h.BerichtVersie == "" {
 		errs = append(errs, ValidationError{
-			Field: "Header.BerichtVersie", Code: "REQUIRED",
-			Message: "BerichtVersie is required",
+			Field: "Header.BerichtVersie", Code: codeRequired,
+			Message: "BerichtVersie is verplicht",
 		})
 	}
 
 	if h.Afzender == "" {
 		errs = append(errs, ValidationError{
-			Field: "Header.Afzender", Code: "REQUIRED",
-			Message: "Afzender is required",
+			Field: "Header.Afzender", Code: codeRequired,
+			Message: "Afzender is verplicht",
 		})
 	}
 
 	if h.Ontvanger == "" {
 		errs = append(errs, ValidationError{
-			Field: "Header.Ontvanger", Code: "REQUIRED",
-			Message: "Ontvanger is required",
+			Field: "Header.Ontvanger", Code: codeRequired,
+			Message: "Ontvanger is verplicht",
 		})
 	}
 
 	if h.BerichtIdentificatie == "" {
 		errs = append(errs, ValidationError{
-			Field: "Header.BerichtIdentificatie", Code: "REQUIRED",
-			Message: "BerichtIdentificatie is required",
+			Field: "Header.BerichtIdentificatie", Code: codeRequired,
+			Message: "BerichtIdentificatie is verplicht",
 		})
 	}
 
 	if h.DagtekeningBericht == "" {
 		errs = append(errs, ValidationError{
-			Field: "Header.DagtekeningBericht", Code: "REQUIRED",
-			Message: "DagtekeningBericht is required",
+			Field: "Header.DagtekeningBericht", Code: codeRequired,
+			Message: "DagtekeningBericht is verplicht",
 		})
 	} else if !ValidateDate(h.DagtekeningBericht) {
 		errs = append(errs, ValidationError{
-			Field: "Header.DagtekeningBericht", Code: "INVALID_DATE",
-			Message: "DagtekeningBericht must be formatted YYYY-MM-DD",
+			Field: "Header.DagtekeningBericht", Code: codeInvalidDate,
+			Message: "DagtekeningBericht moet de notatie JJJJ-MM-DD hebben",
 		})
 	}
 

@@ -14,7 +14,7 @@ type WMO302 struct {
 }
 
 // MessageType returns "WMO302".
-func (m *WMO302) MessageType() string { return "WMO302" }
+func (m *WMO302) MessageType() string { return MessageTypeWMO302 }
 
 // Validate checks all header fields and every client and request record.
 func (m *WMO302) Validate() error {
@@ -22,17 +22,17 @@ func (m *WMO302) Validate() error {
 
 	errs = append(errs, validateHeader(m.Header)...)
 
-	if m.Header.BerichtCode != "302" {
+	if m.Header.BerichtCode != berichtCodeWMO302 {
 		errs = append(errs, ValidationError{
-			Field: "Header.BerichtCode", Code: "WRONG_CODE",
-			Message: "BerichtCode must be 302 for WMO302",
+			Field: msgFieldHeaderBerichtCode, Code: codeWrongCode,
+			Message: "BerichtCode moet 302 zijn voor WMO302",
 		})
 	}
 
 	if len(m.Clienten) == 0 {
 		errs = append(errs, ValidationError{
-			Field: "Client", Code: "REQUIRED",
-			Message: "at least one Client element is required",
+			Field: msgFieldClient, Code: codeRequired,
+			Message: msgClientRequired,
 		})
 	}
 
@@ -52,29 +52,31 @@ func validateWMO302Client(prefix string, cl WMO302Client) ValidationErrors {
 	var errs ValidationErrors
 	if !ValidateBSN(cl.Bsn) {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Bsn", Code: "INVALID_BSN",
-			Message: "BSN must be 9 digits passing the elfproef (11-check)",
+			Field: prefix + ".Bsn", Code: codeInvalidBSN,
+			Message: msgBSNInvalid,
 		})
 	}
 
 	if cl.Naam.Achternaam == "" {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Naam.Achternaam", Code: "REQUIRED",
-			Message: "Achternaam is required",
+			Field: prefix + ".Naam.Achternaam", Code: codeRequired,
+			Message: msgAchternaamRequired,
 		})
 	}
 
 	if cl.Geboortedatum != "" && !ValidateDate(cl.Geboortedatum) {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Geboortedatum", Code: "INVALID_DATE",
-			Message: "Geboortedatum must be formatted YYYY-MM-DD",
+			Field: prefix + ".Geboortedatum", Code: codeInvalidDate,
+			Message: msgGeboortedatumFormat,
 		})
 	}
 
+	errs = append(errs, validateGeslacht(prefix+".Geslacht", cl.Geslacht)...)
+
 	if len(cl.VerzoekToewijzingen) == 0 {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".VerzoekToewijzing", Code: "REQUIRED",
-			Message: "at least one VerzoekToewijzing element is required",
+			Field: prefix + ".VerzoekToewijzing", Code: codeRequired,
+			Message: "ten minste één VerzoekToewijzing-element is verplicht",
 		})
 	}
 
@@ -90,47 +92,47 @@ func validateVerzoekToewijzing(prefix string, vt VerzoekToewijzing) ValidationEr
 	var errs ValidationErrors
 	if vt.ReferentieAanbieder == "" {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".ReferentieAanbieder", Code: "REQUIRED",
-			Message: "ReferentieAanbieder is required",
+			Field: prefix + ".ReferentieAanbieder", Code: codeRequired,
+			Message: "ReferentieAanbieder is verplicht",
 		})
 	}
 
 	if vt.Product.Categorie == "" {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Product.Categorie", Code: "REQUIRED",
-			Message: "Product.Categorie is required",
+			Field: prefix + ".Product.Categorie", Code: codeRequired,
+			Message: msgProductCategorieRequired,
 		})
 	}
 
 	if vt.Product.Code == "" {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Product.Code", Code: "REQUIRED",
-			Message: "Product.Code is required",
+			Field: prefix + ".Product.Code", Code: codeRequired,
+			Message: msgProductCodeRequired,
 		})
 	}
 
 	if vt.Ingangsdatum == "" {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Ingangsdatum", Code: "REQUIRED",
-			Message: "Ingangsdatum is required",
+			Field: prefix + ".Ingangsdatum", Code: codeRequired,
+			Message: msgIngangsdatumRequired,
 		})
 	} else if !ValidateDate(vt.Ingangsdatum) {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Ingangsdatum", Code: "INVALID_DATE",
-			Message: "Ingangsdatum must be formatted YYYY-MM-DD",
+			Field: prefix + ".Ingangsdatum", Code: codeInvalidDate,
+			Message: msgIngangsdatumFormat,
 		})
 	}
 
 	if vt.Einddatum != "" {
 		if !ValidateDate(vt.Einddatum) {
 			errs = append(errs, ValidationError{
-				Field: prefix + ".Einddatum", Code: "INVALID_DATE",
-				Message: "Einddatum must be formatted YYYY-MM-DD",
+				Field: prefix + ".Einddatum", Code: codeInvalidDate,
+				Message: msgEinddatumFormat,
 			})
 		} else if vt.Ingangsdatum != "" && !ValidatePeriod(vt.Ingangsdatum, vt.Einddatum) {
 			errs = append(errs, ValidationError{
-				Field: prefix + ".Einddatum", Code: "INVALID_PERIOD",
-				Message: "Einddatum must be on or after Ingangsdatum",
+				Field: prefix + ".Einddatum", Code: codeInvalidPeriod,
+				Message: msgEinddatumAfterIngangsdatum,
 			})
 		}
 	}

@@ -156,136 +156,96 @@ func TestDecode_TruncatedBerichtCodeTag(t *testing.T) {
 	}
 }
 
-// helpers shared across test files
-
-func validHeader(code string) Header {
-	return Header{
-		BerichtCode:          code,
-		BerichtVersie:        "3.2",
-		Afzender:             "0363",
-		Ontvanger:            "12345678",
-		BerichtIdentificatie: "MSG-TEST-001",
-		DagtekeningBericht:   "2026-04-12",
+func TestDecode_EmptyBerichtCode(t *testing.T) {
+	data := []byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Bericht>
+  <Header>
+    <BerichtCode></BerichtCode>
+  </Header>
+</Bericht>`)
+	_, err := Decode(data)
+	if err == nil {
+		t.Fatal("Decode() error = nil, want ErrUnknownMessage for empty BerichtCode")
+	}
+	if !errors.Is(err, ErrUnknownMessage) {
+		t.Errorf("errors.Is(err, ErrUnknownMessage) = false, got: %v", err)
 	}
 }
 
-const validBSN = "123456782" // elfproef: sum=154, 154%11=0
-
-func validWMO301() *WMO301 {
-	return &WMO301{
-		Header: validHeader("301"),
-		Clienten: []WMO301Client{
-			{
-				Bsn:           validBSN,
-				Naam:          Naam{Voornamen: "Jan", Tussenvoegsels: "van", Achternaam: "Janssen"},
-				Geboortedatum: "1980-01-15",
-				Toewijzingen: []Toewijzing{
-					{
-						ToewijzingNummer: "12345",
-						Product:          Product{Categorie: "03", Code: "H532"},
-						Ingangsdatum:     "2026-05-01",
-						Einddatum:        "2026-12-31",
-					},
-				},
-			},
-		},
+func TestDecode_MissingBerichtCode(t *testing.T) {
+	data := []byte(`<?xml version="1.0" encoding="UTF-8"?>
+<Bericht>
+  <Header>
+    <BerichtVersie>3.2</BerichtVersie>
+  </Header>
+</Bericht>`)
+	_, err := Decode(data)
+	if err == nil {
+		t.Fatal("Decode() error = nil, want ErrUnknownMessage for missing BerichtCode")
+	}
+	if !errors.Is(err, ErrUnknownMessage) {
+		t.Errorf("errors.Is(err, ErrUnknownMessage) = false, got: %v", err)
 	}
 }
 
-func validWMO302() *WMO302 {
-	return &WMO302{
-		Header: validHeader("302"),
-		Clienten: []WMO302Client{
-			{
-				Bsn:  validBSN,
-				Naam: Naam{Achternaam: "Janssen"},
-				VerzoekToewijzingen: []VerzoekToewijzing{
-					{
-						ReferentieAanbieder: "REF-001",
-						Product:             Product{Categorie: "03", Code: "H532"},
-						Ingangsdatum:        "2026-05-01",
-					},
-				},
-			},
-		},
+func TestDecode_EmptyXML(t *testing.T) {
+	_, err := Decode([]byte(""))
+	if err == nil {
+		t.Fatal("Decode() error = nil, want error for empty input")
+	}
+	if !errors.Is(err, ErrInvalidMessage) {
+		t.Errorf("errors.Is(err, ErrInvalidMessage) = false, got: %v", err)
 	}
 }
 
-func validWMO303() *WMO303 {
-	return &WMO303{
-		Header: validHeader("303"),
-		Clienten: []WMO303Client{
-			{
-				Bsn:  validBSN,
-				Naam: Naam{Achternaam: "Janssen"},
-				Declaratieperiode: Declaratieperiode{
-					Begindatum: "2026-04-01",
-					Einddatum:  "2026-04-30",
-				},
-				Prestaties: []Prestatie{
-					{
-						ToewijzingNummer: "12345",
-						Product:          Product{Categorie: "03", Code: "H532"},
-						Begindatum:       "2026-04-01",
-						Einddatum:        "2026-04-30",
-						Omvang:           Omvang{Volume: "32", Eenheid: "uur", Frequentie: "maand"},
-						Bedrag:           "1600.00",
-					},
-				},
-			},
-		},
+func TestEncode_AllMessageTypes(t *testing.T) {
+	// Verify Encode succeeds for each message type and output contains
+	// the XML declaration and correct BerichtCode.
+	tests := []struct {
+		name string
+		msg  Message
+		code string
+	}{
+		{"WMO301", validWMO301(), "301"},
+		{"WMO302", validWMO302(), "302"},
+		{"WMO303", validWMO303(), "303"},
+		{"WMO304", validWMO304(), "304"},
+		{"WMO305", validWMO305(), "305"},
+		{"WMO315", validWMO315(), "315"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data, err := Encode(tt.msg)
+			if err != nil {
+				t.Fatalf("Encode() error = %v", err)
+			}
+			if !bytes.Contains(data, []byte("<?xml")) {
+				t.Error("encoded output missing XML declaration")
+			}
+			if !bytes.Contains(data, []byte("<BerichtCode>"+tt.code+"</BerichtCode>")) {
+				t.Errorf("encoded output missing BerichtCode %s", tt.code)
+			}
+		})
 	}
 }
 
-func validWMO304() *WMO304 {
-	return &WMO304{
-		Header: WMO304Header{
-			Header: validHeader("304"),
-			GerefereerdBerichtCode:          "302",
-			GerefereerdBerichtIdentificatie: "MSG-TEST-001",
-		},
-		RetourCodes: []RetourCode{
-			{Code: "0000", Omschrijving: "Bericht in goede orde ontvangen"},
-		},
+func TestDecodeAs_WrongType(t *testing.T) {
+	// Encode a WMO301 but decode as WMO302; this should succeed at the XML
+	// level but the fields won't match the expected structure.
+	data, err := Encode(validWMO301())
+	if err != nil {
+		t.Fatalf("Encode() error = %v", err)
+	}
+	msg, err := DecodeAs[WMO302](data)
+	if err != nil {
+		t.Fatalf("DecodeAs[WMO302]() error = %v (XML is valid, just wrong type)", err)
+	}
+	// The decoded message should have BerichtCode "301" (from the XML)
+	// even though we decoded it as WMO302.
+	if msg.Header.BerichtCode != "301" {
+		t.Errorf("BerichtCode = %q, want 301", msg.Header.BerichtCode)
 	}
 }
 
-func validWMO305() *WMO305 {
-	return &WMO305{
-		Header: validHeader("305"),
-		Clienten: []WMO305Client{
-			{
-				Bsn:  validBSN,
-				Naam: Naam{Achternaam: "Janssen"},
-				Mutaties: []Mutatie{
-					{
-						ToewijzingNummer: "12345",
-						Mutatiedatum:     "2026-04-12",
-						Mutatiecode:      "01",
-						Begindatum:       "2026-05-01",
-					},
-				},
-			},
-		},
-	}
-}
-
-func validWMO315() *WMO315 {
-	return &WMO315{
-		Header: validHeader("315"),
-		Clienten: []WMO315Client{
-			{
-				Bsn:  validBSN,
-				Naam: Naam{Achternaam: "Janssen"},
-				Statusmeldingen: []StatusmeldingRecord{
-					{
-						ToewijzingNummer: "12345",
-						StatusCode:       "01",
-						StatusDatum:      "2026-05-01",
-						Commentaar:       "Zorg gestart",
-					},
-				},
-			},
-		},
-	}
-}
+// Fixtures (validHeader, validBSN, validWMO301, …) live in fixtures_test.go
+// and are re-exported via export_test.go for the external test package.

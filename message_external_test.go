@@ -1,19 +1,21 @@
-package iwmo
+package iwmo_test
 
 import (
 	"encoding/xml"
 	"strings"
 	"testing"
+
+	"github.com/hyperized/iwmo"
 )
 
 func TestHeader_MarshalUnmarshal(t *testing.T) {
 	// Wrap Header in a struct with a root element for round-trip testing.
 	type wrapper struct {
-		XMLName xml.Name `xml:"Root"`
-		Header  Header   `xml:"Header"`
+		XMLName xml.Name    `xml:"Root"`
+		Header  iwmo.Header `xml:"Header"`
 	}
 	original := wrapper{
-		Header: Header{
+		Header: iwmo.Header{
 			BerichtCode:          "301",
 			BerichtVersie:        "3.2",
 			Afzender:             "0363",
@@ -53,13 +55,49 @@ func TestHeader_MarshalUnmarshal(t *testing.T) {
 	}
 }
 
-func TestNaam_MarshalUnmarshal(t *testing.T) {
+// TestHeader_XsltAndXsdVersionsRoundTrip ensures the optional XsltVersie and
+// XsdVersie fields survive an encode/decode cycle. These fields are required
+// for spec-compliant integration testing with some gemeente endpoints.
+func TestHeader_XsltAndXsdVersionsRoundTrip(t *testing.T) {
 	type wrapper struct {
-		XMLName xml.Name `xml:"Root"`
-		Naam    Naam     `xml:"Naam"`
+		XMLName xml.Name    `xml:"Root"`
+		Header  iwmo.Header `xml:"Header"`
 	}
 	original := wrapper{
-		Naam: Naam{
+		Header: iwmo.Header{
+			BerichtCode:          "301",
+			BerichtVersie:        "3.2",
+			Afzender:             "0363",
+			Ontvanger:            "12345678",
+			BerichtIdentificatie: "MSG-001",
+			DagtekeningBericht:   "2026-04-12",
+			XsltVersie:           "iwmo-3.2-xslt",
+			XsdVersie:            "iwmo-3.2-xsd",
+		},
+	}
+	data, err := xml.Marshal(original)
+	if err != nil {
+		t.Fatalf("xml.Marshal: %v", err)
+	}
+	var decoded wrapper
+	if err := xml.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("xml.Unmarshal: %v", err)
+	}
+	if decoded.Header.XsltVersie != "iwmo-3.2-xslt" {
+		t.Errorf("XsltVersie = %q, want iwmo-3.2-xslt", decoded.Header.XsltVersie)
+	}
+	if decoded.Header.XsdVersie != "iwmo-3.2-xsd" {
+		t.Errorf("XsdVersie = %q, want iwmo-3.2-xsd", decoded.Header.XsdVersie)
+	}
+}
+
+func TestNaam_MarshalUnmarshal(t *testing.T) {
+	type wrapper struct {
+		XMLName xml.Name  `xml:"Root"`
+		Naam    iwmo.Naam `xml:"Naam"`
+	}
+	original := wrapper{
+		Naam: iwmo.Naam{
 			Voornamen:      "Jan",
 			Tussenvoegsels: "van",
 			Achternaam:     "Janssen",
@@ -87,10 +125,10 @@ func TestNaam_MarshalUnmarshal(t *testing.T) {
 
 func TestNaam_OmitemptyTussenvoegsels(t *testing.T) {
 	type wrapper struct {
-		XMLName xml.Name `xml:"Root"`
-		Naam    Naam     `xml:"Naam"`
+		XMLName xml.Name  `xml:"Root"`
+		Naam    iwmo.Naam `xml:"Naam"`
 	}
-	n := wrapper{Naam: Naam{Achternaam: "Smit"}}
+	n := wrapper{Naam: iwmo.Naam{Achternaam: "Smit"}}
 	data, err := xml.Marshal(n)
 	if err != nil {
 		t.Fatalf("xml.Marshal error = %v", err)
@@ -104,10 +142,10 @@ func TestNaam_OmitemptyTussenvoegsels(t *testing.T) {
 
 func TestProduct_MarshalUnmarshal(t *testing.T) {
 	type wrapper struct {
-		XMLName xml.Name `xml:"Root"`
-		Product Product  `xml:"Product"`
+		XMLName xml.Name     `xml:"Root"`
+		Product iwmo.Product `xml:"Product"`
 	}
-	original := wrapper{Product: Product{Categorie: "03", Code: "H532"}}
+	original := wrapper{Product: iwmo.Product{Categorie: "03", Code: "H532"}}
 	data, err := xml.Marshal(original)
 	if err != nil {
 		t.Fatalf("xml.Marshal error = %v", err)
@@ -126,10 +164,10 @@ func TestProduct_MarshalUnmarshal(t *testing.T) {
 
 func TestOmvang_MarshalUnmarshal(t *testing.T) {
 	type wrapper struct {
-		XMLName xml.Name `xml:"Root"`
-		Omvang  Omvang   `xml:"Omvang"`
+		XMLName xml.Name    `xml:"Root"`
+		Omvang  iwmo.Omvang `xml:"Omvang"`
 	}
-	original := wrapper{Omvang: Omvang{Volume: "8", Eenheid: "uur", Frequentie: "week"}}
+	original := wrapper{Omvang: iwmo.Omvang{Volume: "8", Eenheid: "uur", Frequentie: "week"}}
 	data, err := xml.Marshal(original)
 	if err != nil {
 		t.Fatalf("xml.Marshal error = %v", err)
@@ -149,4 +187,3 @@ func TestOmvang_MarshalUnmarshal(t *testing.T) {
 		t.Errorf("Frequentie = %q, want %q", o.Frequentie, "week")
 	}
 }
-

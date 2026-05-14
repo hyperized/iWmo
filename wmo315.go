@@ -15,7 +15,7 @@ type WMO315 struct {
 }
 
 // MessageType returns "WMO315".
-func (m *WMO315) MessageType() string { return "WMO315" }
+func (m *WMO315) MessageType() string { return MessageTypeWMO315 }
 
 // Validate checks all header fields and every client and statusmelding record.
 func (m *WMO315) Validate() error {
@@ -23,17 +23,17 @@ func (m *WMO315) Validate() error {
 
 	errs = append(errs, validateHeader(m.Header)...)
 
-	if m.Header.BerichtCode != "315" {
+	if m.Header.BerichtCode != berichtCodeWMO315 {
 		errs = append(errs, ValidationError{
-			Field: "Header.BerichtCode", Code: "WRONG_CODE",
-			Message: "BerichtCode must be 315 for WMO315",
+			Field: msgFieldHeaderBerichtCode, Code: codeWrongCode,
+			Message: "BerichtCode moet 315 zijn voor WMO315",
 		})
 	}
 
 	if len(m.Clienten) == 0 {
 		errs = append(errs, ValidationError{
-			Field: "Client", Code: "REQUIRED",
-			Message: "at least one Client element is required",
+			Field: msgFieldClient, Code: codeRequired,
+			Message: msgClientRequired,
 		})
 	}
 
@@ -53,29 +53,29 @@ func validateWMO315Client(prefix string, cl WMO315Client) ValidationErrors {
 	var errs ValidationErrors
 	if !ValidateBSN(cl.Bsn) {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Bsn", Code: "INVALID_BSN",
-			Message: "BSN must be 9 digits passing the elfproef (11-check)",
+			Field: prefix + ".Bsn", Code: codeInvalidBSN,
+			Message: msgBSNInvalid,
 		})
 	}
 
 	if cl.Naam.Achternaam == "" {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Naam.Achternaam", Code: "REQUIRED",
-			Message: "Achternaam is required",
+			Field: prefix + ".Naam.Achternaam", Code: codeRequired,
+			Message: msgAchternaamRequired,
 		})
 	}
 
 	if cl.Geboortedatum != "" && !ValidateDate(cl.Geboortedatum) {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Geboortedatum", Code: "INVALID_DATE",
-			Message: "Geboortedatum must be formatted YYYY-MM-DD",
+			Field: prefix + ".Geboortedatum", Code: codeInvalidDate,
+			Message: msgGeboortedatumFormat,
 		})
 	}
 
 	if len(cl.Statusmeldingen) == 0 {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Statusmelding", Code: "REQUIRED",
-			Message: "at least one Statusmelding element is required",
+			Field: prefix + ".Statusmelding", Code: codeRequired,
+			Message: "ten minste één Statusmelding-element is verplicht",
 		})
 	}
 
@@ -91,27 +91,27 @@ func validateStatusmeldingRecord(prefix string, sm StatusmeldingRecord) Validati
 	var errs ValidationErrors
 	if sm.ToewijzingNummer == "" {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".ToewijzingNummer", Code: "REQUIRED",
-			Message: "ToewijzingNummer is required",
+			Field: prefix + ".ToewijzingNummer", Code: codeRequired,
+			Message: msgToewijzingNummerRequired,
 		})
 	}
 
 	if sm.StatusCode == "" {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".StatusCode", Code: "REQUIRED",
-			Message: "StatusCode is required",
+			Field: prefix + ".StatusCode", Code: codeRequired,
+			Message: "StatusCode is verplicht",
 		})
 	}
 
 	if sm.StatusDatum == "" {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".StatusDatum", Code: "REQUIRED",
-			Message: "StatusDatum is required",
+			Field: prefix + ".StatusDatum", Code: codeRequired,
+			Message: "StatusDatum is verplicht",
 		})
 	} else if !ValidateDate(sm.StatusDatum) {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".StatusDatum", Code: "INVALID_DATE",
-			Message: "StatusDatum must be formatted YYYY-MM-DD",
+			Field: prefix + ".StatusDatum", Code: codeInvalidDate,
+			Message: "StatusDatum moet de notatie JJJJ-MM-DD hebben",
 		})
 	}
 

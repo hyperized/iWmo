@@ -15,33 +15,34 @@ type WMO304 struct {
 }
 
 // MessageType returns "WMO304".
-func (m *WMO304) MessageType() string { return "WMO304" }
+func (m *WMO304) MessageType() string { return MessageTypeWMO304 }
 
 // Validate checks all header fields and that at least one RetourCode is present.
 func (m *WMO304) Validate() error {
 	var errs ValidationErrors
 
+	// WMO304Header embeds the standard Header; validate the embedded part separately.
 	errs = append(errs, validateHeader(m.Header.Header)...)
 
-	if m.Header.BerichtCode != "304" {
+	if m.Header.BerichtCode != berichtCodeWMO304 {
 		errs = append(errs, ValidationError{
-			Field: "Header.BerichtCode", Code: "WRONG_CODE",
-			Message: "BerichtCode must be 304 for WMO304",
+			Field: msgFieldHeaderBerichtCode, Code: codeWrongCode,
+			Message: "BerichtCode moet 304 zijn voor WMO304",
 		})
 	}
 
 	if len(m.RetourCodes) == 0 {
 		errs = append(errs, ValidationError{
-			Field: "RetourCode", Code: "REQUIRED",
-			Message: "at least one RetourCode element is required",
+			Field: "RetourCode", Code: codeRequired,
+			Message: "ten minste één RetourCode-element is verplicht",
 		})
 	}
 
 	for i, rc := range m.RetourCodes {
 		if rc.Code == "" {
 			errs = append(errs, ValidationError{
-				Field: "RetourCode[" + strconv.Itoa(i) + "].Code", Code: "REQUIRED",
-				Message: "RetourCode.Code is required",
+				Field: "RetourCode[" + strconv.Itoa(i) + "].Code", Code: codeRequired,
+				Message: "RetourCode.Code is verplicht",
 			})
 		}
 	}

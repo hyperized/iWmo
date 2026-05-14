@@ -391,3 +391,145 @@ func TestHTTPSender_Forbidden(t *testing.T) {
 		t.Errorf("errors.Is(err, ErrAuthentication) = false, got: %v", err)
 	}
 }
+
+func TestClient_SendToewijzing_ValidatesFirst(t *testing.T) {
+	ms := &mockSender{fn: func(_ context.Context, _ []byte) ([]byte, error) {
+		t.Error("Send should not be called when message is invalid")
+		return nil, nil
+	}}
+	c, _ := NewClient(WithSender(ms))
+	_, err := c.SendToewijzing(context.Background(), &WMO301{})
+	if err == nil {
+		t.Fatal("SendToewijzing() error = nil for invalid message")
+	}
+	if !errors.Is(err, ErrInvalidMessage) {
+		t.Errorf("errors.Is(err, ErrInvalidMessage) = false, got: %v", err)
+	}
+}
+
+func TestClient_SendDeclaratie_ValidatesFirst(t *testing.T) {
+	ms := &mockSender{fn: func(_ context.Context, _ []byte) ([]byte, error) {
+		t.Error("Send should not be called when message is invalid")
+		return nil, nil
+	}}
+	c, _ := NewClient(WithSender(ms))
+	_, err := c.SendDeclaratie(context.Background(), &WMO303{})
+	if err == nil {
+		t.Fatal("SendDeclaratie() error = nil for invalid message")
+	}
+	if !errors.Is(err, ErrInvalidMessage) {
+		t.Errorf("errors.Is(err, ErrInvalidMessage) = false, got: %v", err)
+	}
+}
+
+func TestClient_SendMutatie_ValidatesFirst(t *testing.T) {
+	ms := &mockSender{fn: func(_ context.Context, _ []byte) ([]byte, error) {
+		t.Error("Send should not be called when message is invalid")
+		return nil, nil
+	}}
+	c, _ := NewClient(WithSender(ms))
+	_, err := c.SendMutatie(context.Background(), &WMO305{})
+	if err == nil {
+		t.Fatal("SendMutatie() error = nil for invalid message")
+	}
+	if !errors.Is(err, ErrInvalidMessage) {
+		t.Errorf("errors.Is(err, ErrInvalidMessage) = false, got: %v", err)
+	}
+}
+
+func TestClient_SendStatusmelding_ValidatesFirst(t *testing.T) {
+	ms := &mockSender{fn: func(_ context.Context, _ []byte) ([]byte, error) {
+		t.Error("Send should not be called when message is invalid")
+		return nil, nil
+	}}
+	c, _ := NewClient(WithSender(ms))
+	_, err := c.SendStatusmelding(context.Background(), &WMO315{})
+	if err == nil {
+		t.Fatal("SendStatusmelding() error = nil for invalid message")
+	}
+	if !errors.Is(err, ErrInvalidMessage) {
+		t.Errorf("errors.Is(err, ErrInvalidMessage) = false, got: %v", err)
+	}
+}
+
+func TestClient_TransportError_IsPropagated(t *testing.T) {
+	transportErr := errors.New("connection refused")
+	ms := &mockSender{fn: func(_ context.Context, _ []byte) ([]byte, error) {
+		return nil, transportErr
+	}}
+	c, _ := NewClient(WithSender(ms))
+
+	tests := []struct {
+		name string
+		send func() error
+	}{
+		{"SendToewijzing", func() error { _, err := c.SendToewijzing(context.Background(), validWMO301()); return err }},
+		{"SendDeclaratie", func() error { _, err := c.SendDeclaratie(context.Background(), validWMO303()); return err }},
+		{"SendMutatie", func() error { _, err := c.SendMutatie(context.Background(), validWMO305()); return err }},
+		{"SendStatusmelding", func() error {
+			_, err := c.SendStatusmelding(context.Background(), validWMO315())
+			return err
+		}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.send()
+			if err == nil {
+				t.Fatal("error = nil, want ErrTransport")
+			}
+			if !errors.Is(err, ErrTransport) {
+				t.Errorf("errors.Is(err, ErrTransport) = false, got: %v", err)
+			}
+		})
+	}
+}
+
+func TestNewClient_AllOptionsApplied(t *testing.T) {
+	logger := slog.New(slog.DiscardHandler)
+	custom := &http.Client{}
+	ms := &mockSender{fn: func(_ context.Context, _ []byte) ([]byte, error) { return nil, nil }}
+	c, err := NewClient(
+		WithBaseURL("https://example.nl"),
+		WithAGBCode("12345678"),
+		WithGemeenteCode("0363"),
+		WithHTTPClient(custom),
+		WithLogger(logger),
+		WithSender(ms),
+	)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	if c.agbCode != "12345678" {
+		t.Errorf("agbCode = %q, want 12345678", c.agbCode)
+	}
+	if c.gemeenteCode != "0363" {
+		t.Errorf("gemeenteCode = %q, want 0363", c.gemeenteCode)
+	}
+	if c.logger != logger {
+		t.Error("logger was not set correctly")
+	}
+	// When WithSender is provided, it takes precedence; baseURL is not required.
+	if c.sender != ms {
+		t.Error("sender was not set to the provided mockSender")
+	}
+}
+
+func TestHTTPSender_BadGateway(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadGateway)
+	}))
+	defer ts.Close()
+
+	c, _ := NewClient(WithBaseURL(ts.URL))
+	_, err := c.SendVerzoekToewijzing(context.Background(), validWMO302())
+	if err == nil {
+		t.Fatal("error = nil, want ErrTransport for 502")
+	}
+	if !errors.Is(err, ErrTransport) {
+		t.Errorf("errors.Is(err, ErrTransport) = false, got: %v", err)
+	}
+	// Ensure it is NOT ErrAuthentication for non-401/403 error codes.
+	if errors.Is(err, ErrAuthentication) {
+		t.Error("502 should be ErrTransport, not ErrAuthentication")
+	}
+}

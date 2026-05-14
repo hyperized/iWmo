@@ -7,14 +7,22 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"time"
 )
 
 // maxResponseBytes is the maximum number of bytes read from an HTTP response body.
 const maxResponseBytes = 10 << 20 // 10 MiB
 
+// defaultHTTPTimeout is the request timeout used by the default HTTP client.
+// Overridable via [WithHTTPClient]. We avoid http.DefaultClient because its
+// zero Timeout would let a slow or hung iWMO endpoint stall callers indefinitely.
+const defaultHTTPTimeout = 30 * time.Second
+
 // Sender abstracts message transport. The default implementation uses HTTP(S),
 // but callers may substitute any backend (e.g. VECOZO message bus, file-based
 // exchange) by passing [WithSender] to [NewClient].
+//
+// Implementations must be safe for concurrent use by multiple goroutines.
 type Sender interface {
 	Send(ctx context.Context, data []byte) ([]byte, error)
 }
@@ -22,6 +30,8 @@ type Sender interface {
 // Client sends and receives iWMO v3.2 messages.
 //
 // Construct one with [NewClient] and at least [WithBaseURL] or [WithSender].
+//
+// A Client is safe for concurrent use by multiple goroutines.
 type Client struct {
 	httpClient   *http.Client
 	baseURL      string
@@ -34,7 +44,9 @@ type Client struct {
 // Option is a functional option for [NewClient].
 type Option func(*Client)
 
-// WithHTTPClient replaces the default [http.DefaultClient] with c.
+// WithHTTPClient replaces the default HTTP client with c. The default client
+// has a request timeout of 30 seconds; pass a fully configured *http.Client
+// (with your own Timeout, Transport, etc.) to override it.
 func WithHTTPClient(c *http.Client) Option {
 	return func(cl *Client) { cl.httpClient = c }
 }
@@ -68,9 +80,12 @@ func WithSender(s Sender) Option {
 // NewClient creates a new Client, applies opts in order, and validates the
 // resulting configuration. Returns an error if the configuration is invalid
 // (e.g. neither baseURL nor a custom Sender was provided).
+//
+// The default HTTP client has a 30 second request timeout; override with
+// [WithHTTPClient] when a different timeout or transport is needed.
 func NewClient(opts ...Option) (*Client, error) {
 	c := &Client{
-		httpClient: http.DefaultClient,
+		httpClient: &http.Client{Timeout: defaultHTTPTimeout},
 		logger:     slog.Default(),
 	}
 	for _, opt := range opts {
@@ -168,6 +183,7 @@ func (s *httpSender) Send(ctx context.Context, data []byte) ([]byte, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/xml; charset=utf-8")
+	req.Header.Set("Accept", "application/xml")
 
 	resp, err := s.client.Do(req)
 	if err != nil {

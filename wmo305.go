@@ -15,7 +15,7 @@ type WMO305 struct {
 }
 
 // MessageType returns "WMO305".
-func (m *WMO305) MessageType() string { return "WMO305" }
+func (m *WMO305) MessageType() string { return MessageTypeWMO305 }
 
 // Validate checks all header fields and every client and mutatie record.
 func (m *WMO305) Validate() error {
@@ -23,17 +23,17 @@ func (m *WMO305) Validate() error {
 
 	errs = append(errs, validateHeader(m.Header)...)
 
-	if m.Header.BerichtCode != "305" {
+	if m.Header.BerichtCode != berichtCodeWMO305 {
 		errs = append(errs, ValidationError{
-			Field: "Header.BerichtCode", Code: "WRONG_CODE",
-			Message: "BerichtCode must be 305 for WMO305",
+			Field: msgFieldHeaderBerichtCode, Code: codeWrongCode,
+			Message: "BerichtCode moet 305 zijn voor WMO305",
 		})
 	}
 
 	if len(m.Clienten) == 0 {
 		errs = append(errs, ValidationError{
-			Field: "Client", Code: "REQUIRED",
-			Message: "at least one Client element is required",
+			Field: msgFieldClient, Code: codeRequired,
+			Message: msgClientRequired,
 		})
 	}
 
@@ -53,29 +53,29 @@ func validateWMO305Client(prefix string, cl WMO305Client) ValidationErrors {
 	var errs ValidationErrors
 	if !ValidateBSN(cl.Bsn) {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Bsn", Code: "INVALID_BSN",
-			Message: "BSN must be 9 digits passing the elfproef (11-check)",
+			Field: prefix + ".Bsn", Code: codeInvalidBSN,
+			Message: msgBSNInvalid,
 		})
 	}
 
 	if cl.Naam.Achternaam == "" {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Naam.Achternaam", Code: "REQUIRED",
-			Message: "Achternaam is required",
+			Field: prefix + ".Naam.Achternaam", Code: codeRequired,
+			Message: msgAchternaamRequired,
 		})
 	}
 
 	if cl.Geboortedatum != "" && !ValidateDate(cl.Geboortedatum) {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Geboortedatum", Code: "INVALID_DATE",
-			Message: "Geboortedatum must be formatted YYYY-MM-DD",
+			Field: prefix + ".Geboortedatum", Code: codeInvalidDate,
+			Message: msgGeboortedatumFormat,
 		})
 	}
 
 	if len(cl.Mutaties) == 0 {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Mutatie", Code: "REQUIRED",
-			Message: "at least one Mutatie element is required",
+			Field: prefix + ".Mutatie", Code: codeRequired,
+			Message: "ten minste één Mutatie-element is verplicht",
 		})
 	}
 
@@ -91,75 +91,75 @@ func validateMutatie(prefix string, mu Mutatie) ValidationErrors {
 	var errs ValidationErrors
 	if mu.ToewijzingNummer == "" {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".ToewijzingNummer", Code: "REQUIRED",
-			Message: "ToewijzingNummer is required",
+			Field: prefix + ".ToewijzingNummer", Code: codeRequired,
+			Message: msgToewijzingNummerRequired,
 		})
 	}
 
 	if mu.Mutatiedatum == "" {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Mutatiedatum", Code: "REQUIRED",
-			Message: "Mutatiedatum is required",
+			Field: prefix + ".Mutatiedatum", Code: codeRequired,
+			Message: "Mutatiedatum is verplicht",
 		})
 	} else if !ValidateDate(mu.Mutatiedatum) {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Mutatiedatum", Code: "INVALID_DATE",
-			Message: "Mutatiedatum must be formatted YYYY-MM-DD",
+			Field: prefix + ".Mutatiedatum", Code: codeInvalidDate,
+			Message: "Mutatiedatum moet de notatie JJJJ-MM-DD hebben",
 		})
 	}
 
 	switch mu.Mutatiecode {
-	case "01":
+	case MutatiecodeStart:
 		if mu.Begindatum == "" {
 			errs = append(errs, ValidationError{
-				Field: prefix + ".Begindatum", Code: "REQUIRED",
-				Message: "Begindatum is required for start (Mutatiecode 01)",
+				Field: prefix + ".Begindatum", Code: codeRequired,
+				Message: "Begindatum is verplicht bij start (Mutatiecode 01)",
 			})
 		}
-	case "02":
+	case MutatiecodeWijziging:
 		if mu.Product == nil {
 			errs = append(errs, ValidationError{
-				Field: prefix + ".Product", Code: "REQUIRED",
-				Message: "Product is required for wijziging (Mutatiecode 02)",
+				Field: prefix + ".Product", Code: codeRequired,
+				Message: "Product is verplicht bij wijziging (Mutatiecode 02)",
 			})
 		}
-	case "03":
+	case MutatiecodeStop:
 		if mu.Einddatum == "" {
 			errs = append(errs, ValidationError{
-				Field: prefix + ".Einddatum", Code: "REQUIRED",
-				Message: "Einddatum is required for stop (Mutatiecode 03)",
+				Field: prefix + ".Einddatum", Code: codeRequired,
+				Message: "Einddatum is verplicht bij stop (Mutatiecode 03)",
 			})
 		}
 	case "":
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Mutatiecode", Code: "REQUIRED",
-			Message: "Mutatiecode is required",
+			Field: prefix + ".Mutatiecode", Code: codeRequired,
+			Message: "Mutatiecode is verplicht",
 		})
 	default:
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Mutatiecode", Code: "INVALID_VALUE",
-			Message: "Mutatiecode must be 01 (start), 02 (wijziging), or 03 (stop)",
+			Field: prefix + ".Mutatiecode", Code: codeInvalidValue,
+			Message: "Mutatiecode moet 01 (start), 02 (wijziging) of 03 (stop) zijn",
 		})
 	}
 
 	if mu.Begindatum != "" && !ValidateDate(mu.Begindatum) {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Begindatum", Code: "INVALID_DATE",
-			Message: "Begindatum must be formatted YYYY-MM-DD",
+			Field: prefix + ".Begindatum", Code: codeInvalidDate,
+			Message: msgBegindatumFormat,
 		})
 	}
 
 	if mu.Einddatum != "" && !ValidateDate(mu.Einddatum) {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Einddatum", Code: "INVALID_DATE",
-			Message: "Einddatum must be formatted YYYY-MM-DD",
+			Field: prefix + ".Einddatum", Code: codeInvalidDate,
+			Message: msgEinddatumFormat,
 		})
 	}
 
 	if mu.Begindatum != "" && mu.Einddatum != "" && !ValidatePeriod(mu.Begindatum, mu.Einddatum) {
 		errs = append(errs, ValidationError{
-			Field: prefix + ".Einddatum", Code: "INVALID_PERIOD",
-			Message: "Einddatum must be on or after Begindatum",
+			Field: prefix + ".Einddatum", Code: codeInvalidPeriod,
+			Message: msgEinddatumAfterBegindatum,
 		})
 	}
 

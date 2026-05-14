@@ -1,34 +1,36 @@
-package iwmo
+package iwmo_test
 
 import (
 	"errors"
 	"os"
 	"testing"
+
+	"github.com/hyperized/iwmo"
 )
 
 func TestWMO315_MessageType(t *testing.T) {
-	m := &WMO315{}
-	if got := m.MessageType(); got != "WMO315" {
-		t.Errorf("MessageType() = %q, want %q", got, "WMO315")
+	m := &iwmo.WMO315{}
+	if got := m.MessageType(); got != iwmo.MessageTypeWMO315 {
+		t.Errorf("MessageType() = %q, want %q", got, iwmo.MessageTypeWMO315)
 	}
 }
 
 func TestWMO315_Validate(t *testing.T) {
 	tests := []struct {
 		name    string
-		msg     *WMO315
+		msg     *iwmo.WMO315
 		wantErr bool
 		errCode string
 	}{
 		{
 			name:    "valid message",
-			msg:     validWMO315(),
+			msg:     iwmo.ValidWMO315(),
 			wantErr: false,
 		},
 		{
 			name: "wrong BerichtCode",
-			msg: func() *WMO315 {
-				m := validWMO315()
+			msg: func() *iwmo.WMO315 {
+				m := iwmo.ValidWMO315()
 				m.Header.BerichtCode = "301"
 				return m
 			}(),
@@ -37,8 +39,8 @@ func TestWMO315_Validate(t *testing.T) {
 		},
 		{
 			name: "missing Achternaam",
-			msg: func() *WMO315 {
-				m := validWMO315()
+			msg: func() *iwmo.WMO315 {
+				m := iwmo.ValidWMO315()
 				m.Clienten[0].Naam.Achternaam = ""
 				return m
 			}(),
@@ -47,8 +49,8 @@ func TestWMO315_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid BSN",
-			msg: func() *WMO315 {
-				m := validWMO315()
+			msg: func() *iwmo.WMO315 {
+				m := iwmo.ValidWMO315()
 				m.Clienten[0].Bsn = "123456789"
 				return m
 			}(),
@@ -57,8 +59,8 @@ func TestWMO315_Validate(t *testing.T) {
 		},
 		{
 			name: "missing StatusCode",
-			msg: func() *WMO315 {
-				m := validWMO315()
+			msg: func() *iwmo.WMO315 {
+				m := iwmo.ValidWMO315()
 				m.Clienten[0].Statusmeldingen[0].StatusCode = ""
 				return m
 			}(),
@@ -67,8 +69,8 @@ func TestWMO315_Validate(t *testing.T) {
 		},
 		{
 			name: "missing StatusDatum",
-			msg: func() *WMO315 {
-				m := validWMO315()
+			msg: func() *iwmo.WMO315 {
+				m := iwmo.ValidWMO315()
 				m.Clienten[0].Statusmeldingen[0].StatusDatum = ""
 				return m
 			}(),
@@ -77,8 +79,8 @@ func TestWMO315_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid StatusDatum",
-			msg: func() *WMO315 {
-				m := validWMO315()
+			msg: func() *iwmo.WMO315 {
+				m := iwmo.ValidWMO315()
 				m.Clienten[0].Statusmeldingen[0].StatusDatum = "12-05-2026"
 				return m
 			}(),
@@ -87,8 +89,8 @@ func TestWMO315_Validate(t *testing.T) {
 		},
 		{
 			name: "no statusmeldingen",
-			msg: func() *WMO315 {
-				m := validWMO315()
+			msg: func() *iwmo.WMO315 {
+				m := iwmo.ValidWMO315()
 				m.Clienten[0].Statusmeldingen = nil
 				return m
 			}(),
@@ -97,8 +99,8 @@ func TestWMO315_Validate(t *testing.T) {
 		},
 		{
 			name: "missing ToewijzingNummer",
-			msg: func() *WMO315 {
-				m := validWMO315()
+			msg: func() *iwmo.WMO315 {
+				m := iwmo.ValidWMO315()
 				m.Clienten[0].Statusmeldingen[0].ToewijzingNummer = ""
 				return m
 			}(),
@@ -107,8 +109,8 @@ func TestWMO315_Validate(t *testing.T) {
 		},
 		{
 			name: "no clients",
-			msg: func() *WMO315 {
-				m := validWMO315()
+			msg: func() *iwmo.WMO315 {
+				m := iwmo.ValidWMO315()
 				m.Clienten = nil
 				return m
 			}(),
@@ -117,8 +119,8 @@ func TestWMO315_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid Geboortedatum",
-			msg: func() *WMO315 {
-				m := validWMO315()
+			msg: func() *iwmo.WMO315 {
+				m := iwmo.ValidWMO315()
 				m.Clienten[0].Geboortedatum = "15-01-1980"
 				return m
 			}(),
@@ -134,7 +136,7 @@ func TestWMO315_Validate(t *testing.T) {
 				return
 			}
 			if tt.wantErr && tt.errCode != "" {
-				var ve ValidationErrors
+				var ve iwmo.ValidationErrors
 				if !errors.As(err, &ve) {
 					t.Fatalf("expected ValidationErrors, got %T", err)
 				}
@@ -154,12 +156,12 @@ func TestWMO315_Validate(t *testing.T) {
 }
 
 func TestWMO315_MarshalUnmarshal(t *testing.T) {
-	original := validWMO315()
-	data, err := Encode(original)
+	original := iwmo.ValidWMO315()
+	data, err := iwmo.Encode(original)
 	if err != nil {
 		t.Fatalf("Encode() error = %v", err)
 	}
-	decoded, err := DecodeAs[WMO315](data)
+	decoded, err := iwmo.DecodeAs[iwmo.WMO315](data)
 	if err != nil {
 		t.Fatalf("DecodeAs[WMO315]() error = %v", err)
 	}
@@ -183,7 +185,7 @@ func TestWMO315_FromFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadFile: %v", err)
 	}
-	msg, err := DecodeAs[WMO315](data)
+	msg, err := iwmo.DecodeAs[iwmo.WMO315](data)
 	if err != nil {
 		t.Fatalf("DecodeAs[WMO315]() error = %v", err)
 	}
@@ -197,11 +199,65 @@ func TestWMO315_InvalidFile_FailsValidation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadFile: %v", err)
 	}
-	msg, err := DecodeAs[WMO315](data)
+	msg, err := iwmo.DecodeAs[iwmo.WMO315](data)
 	if err != nil {
 		t.Fatalf("DecodeAs[WMO315]() error = %v", err)
 	}
 	if err := msg.Validate(); err == nil {
 		t.Error("Validate() returned nil for invalid message, want error")
+	}
+}
+
+func TestWMO315_Validate_MultipleClients(t *testing.T) {
+	m := iwmo.ValidWMO315()
+	m.Clienten = append(m.Clienten, iwmo.WMO315Client{
+		Bsn:  "900212640",
+		Naam: iwmo.Naam{Achternaam: "De Vries"},
+		Statusmeldingen: []iwmo.StatusmeldingRecord{
+			{
+				ToewijzingNummer: "67890",
+				StatusCode:       "02",
+				StatusDatum:      "2026-06-01",
+			},
+		},
+	})
+	if err := m.Validate(); err != nil {
+		t.Errorf("Validate() error = %v, want nil for valid multi-client message", err)
+	}
+}
+
+func TestWMO315_Validate_EmptyMessage(t *testing.T) {
+	m := &iwmo.WMO315{}
+	err := m.Validate()
+	if err == nil {
+		t.Fatal("Validate() error = nil for empty WMO315")
+	}
+	var ve iwmo.ValidationErrors
+	if !errors.As(err, &ve) {
+		t.Fatalf("expected ValidationErrors, got %T", err)
+	}
+	if len(ve) < 3 {
+		t.Errorf("expected at least 3 validation errors for empty WMO315, got %d: %v", len(ve), ve)
+	}
+}
+
+func TestWMO315_Validate_MultipleStatusmeldingen(t *testing.T) {
+	m := iwmo.ValidWMO315()
+	m.Clienten[0].Statusmeldingen = append(m.Clienten[0].Statusmeldingen, iwmo.StatusmeldingRecord{
+		ToewijzingNummer: "12345",
+		StatusCode:       "02",
+		StatusDatum:      "2026-06-15",
+		Commentaar:       "Zorg gewijzigd",
+	})
+	if err := m.Validate(); err != nil {
+		t.Errorf("Validate() error = %v, want nil for multiple valid statusmeldingen", err)
+	}
+}
+
+func TestWMO315_Validate_WithoutCommentaar(t *testing.T) {
+	m := iwmo.ValidWMO315()
+	m.Clienten[0].Statusmeldingen[0].Commentaar = ""
+	if err := m.Validate(); err != nil {
+		t.Errorf("Validate() error = %v, want nil (Commentaar is optional)", err)
 	}
 }

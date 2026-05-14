@@ -50,6 +50,13 @@
 //
 // # Transport
 //
-// The client uses HTTP(S) by default. Alternative transports (e.g., VECOZO
-// message bus, file-based exchange) can be plugged in via [WithSender].
+// The client uses HTTP(S) by default with a 30 second request timeout.
+// Alternative transports (e.g., VECOZO message bus, file-based exchange) can
+// be plugged in via [WithSender]; the timeout can be overridden via
+// [WithHTTPClient].
+//
+// # Logging
+//
+// The default logger is [slog.Default]; override with [WithLogger] to capture
+// debug output, or pass slog.New(slog.DiscardHandler) to suppress it entirely.
 package iwmo

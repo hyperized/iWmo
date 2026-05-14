@@ -5,12 +5,12 @@ linters:
   disable:
     - depguard       # no dependency allowlist needed for a library
     - exhaustruct    # requiring all struct fields is impractical for XML types
+    - gomodguard     # deprecated; no module-allowlist policy configured here
     - ireturn        # returning interfaces (Message) is the intended design
     - maintidx       # maintainability index penalises table-driven tests
     - nlreturn       # conflicts with wsl_v5; redundant empty-line enforcement
     - noinlineerr    # inline err checks (if err := …; err != nil) are idiomatic Go
     - paralleltest   # t.Parallel() adds complexity without benefit for fast unit tests
-    - testpackage    # internal (white-box) tests are appropriate for this package
     - varnamelen     # short names (h, p, b, i) are idiomatic for small scopes
     - wsl            # deprecated in v2; replaced by wsl_v5
   exclusions:
@@ -24,6 +24,13 @@ linters:
           - goconst
           - revive
           - wsl_v5
+          - gochecknoglobals  # test fixtures and re-exports are intentional package-level vars
+          - gosec             # G304 file-inclusion warnings are not relevant for testdata fixtures
+          - lll               # long table rows are clearer than line-broken alternatives
+      # Tests that genuinely need access to unexported symbols stay in package iwmo.
+      - path: (client_test|codec_test|validate_test|fixtures_test|export_test)\.go
+        linters:
+          - testpackage
   settings:
     cyclop:
       max-complexity: 20

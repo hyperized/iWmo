@@ -36,17 +36,17 @@ func Decode(data []byte) (Message, error) {
 	}
 
 	switch peek.Header.BerichtCode {
-	case "301":
+	case berichtCodeWMO301:
 		return DecodeAs[WMO301](data)
-	case "302":
+	case berichtCodeWMO302:
 		return DecodeAs[WMO302](data)
-	case "303":
+	case berichtCodeWMO303:
 		return DecodeAs[WMO303](data)
-	case "304":
+	case berichtCodeWMO304:
 		return DecodeAs[WMO304](data)
-	case "305":
+	case berichtCodeWMO305:
 		return DecodeAs[WMO305](data)
-	case "315":
+	case berichtCodeWMO315:
 		return DecodeAs[WMO315](data)
 	default:
 		return nil, fmt.Errorf("%w: BerichtCode %q", ErrUnknownMessage, peek.Header.BerichtCode)
